@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PATIENT
+}
+
+model User {
+  id            String         @id @default(cuid())
+  nationalId    String         @unique // الرقم القومي (Primary Login ID)
+  passwordHash  String                 // الباسورد
+  fullNameAr    String
+  fullNameEn    String?
+  phone         String
+  role          Role           @default(PATIENT)
+  membershipNo  String         @unique // Unique card number for QR verification
+  isActive      Boolean        @default(true)
+  familyMembers FamilyMember[]
+  bookings      BookingLog[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model FamilyMember {
+  id           String   @id @default(cuid())
+  parentUserId String
+  parentUser   User     @relation(fields: [parentUserId], references: [id], onDelete: Cascade)
+  fullNameAr   String
+  fullNameEn   String?
+  nationalId   String   @unique // الرقم القومي للتابع
+  relationAr   String           // زوجة، ابن، ابنة، أب، أم
+  relationEn   String           // Spouse, Son, Daughter, Father, Mother
+  createdAt    DateTime @default(now())
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  nameAr      String
+  nameEn      String
+  iconName    String     // Lucide icon identifier
+  parentId    String?    // Null for top-level categories; populated for Doctor sub-specialties
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[] @relation("CategoryHierarchy")
+  providers   Provider[]
+  sortOrder   Int        @default(0)
+}
+
+model Provider {
+  id               String       @id @default(cuid())
+  slug             String       @unique
+  categoryId       String
+  category         Category     @relation(fields: [categoryId], references: [id])
+  nameAr           String       // اسم العيادة / الطبيب / المركز
+  nameEn           String
+  specialtyTitleAr String       // التخصص الظاهر في الكارت
+  specialtyTitleEn String
+  bioAr            String       @db.Text // مساحة عرض العيادة والخدمات
+  bioEn            String       @db.Text
+  discountPercent  Int          // نسبة الخصم الحقيقية (e.g., 35 for 35% OFF)
+  servicesJson     Json         // Array of: { id, nameAr, nameEn, originalPrice, discountedPrice }
+  cityAr           String
+  cityEn           String
+  addressAr        String       // العنوان بالتفصيل
+  addressEn        String
+  phone            String       // التليفون
+  whatsapp         String       // رقم الواتس آب للحجز (International format e.g. 2010xxxxxxxx or 9665xxxxxxxx)
+  workingHoursAr   String?
+  workingHoursEn   String?
+  coverImageUrl    String?
+  isFeatured       Boolean      @default(false)
+  isActive         Boolean      @default(true)
+  bookings         BookingLog[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model BookingLog {
+  id           String   @id @default(cuid())
+  providerId   String
+  provider     Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  patientName  String   // الاسم
+  patientPhone String   // التليفون
+  nationalId   String?  // الرقم القومي
+  createdAt    DateTime @default(now())
+}

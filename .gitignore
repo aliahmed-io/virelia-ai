@@ -1,0 +1,30 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/cache
+
+# Next.js Build Output
+/.next/
+/out/
+/build
+
+# Test & Playwright Output
+/test-results/
+/playwright-report/
+/coverage/
+
+# Environment Variables
+.env
+.env*.local
+
+# TypeScript Cache
+*.tsbuildinfo
+next-env.d.ts
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

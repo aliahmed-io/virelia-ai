@@ -1,0 +1,44 @@
+{
+  "name": "صحة الأسرة | Family Health (F.H)",
+  "short_name": "Family Health",
+  "description": "شبكة الخصومات الطبية المعتمدة في مصر - رعاية شاملة لكل جيل",
+  "start_url": "/ar",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8FAFC",
+  "theme_color": "#156570",
+  "dir": "rtl",
+  "lang": "ar",
+  "categories": ["medical", "health", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "كارت العائلة الرقمي",
+      "short_name": "كارتي",
+      "description": "عرض كارت الخصم والباركود فوراً",
+      "url": "/ar/portal",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "دليل الأطباء والعيادات",
+      "short_name": "الدليل",
+      "description": "البحث في شبكة المراكز المعتمدة والأسعار",
+      "url": "/ar/directory",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

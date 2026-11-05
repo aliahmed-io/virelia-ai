@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-cairo: 'Cairo', system-ui, sans-serif;
+  --font-tajawal: 'Tajawal', system-ui, sans-serif;
+}
+
+body {
+  color: #0f172a;
+  background-color: #f8fafc;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Native App touch feel */
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safe area insets for mobile notches and home bars */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Selection highlight in brand teal */
+::selection {
+  background-color: #dbeef1;
+  color: #156570;
+}
+
+
+/* Shared application surfaces and interaction rules. */
+:root { --app-ink: #183b45; --app-line: #dce6e9; --app-surface: #f3f7f8; }
+body { background: var(--app-surface); color: var(--app-ink); }
+.app-content { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
+[data-app-header] { padding-top: env(safe-area-inset-top, 0px); }
+[data-app-header] > div:first-child { height: 72px; }
+h1 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; line-height: 1.4; letter-spacing: -.025em; }
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { letter-spacing: 0; }
+.workspace-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+.home-shortcuts { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 16px; }
+.membership-shortcut, .care-shortcut { border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 16px; transition: border-color .15s; }
+.membership-shortcut { background: #12515b; color: white; border: 1px solid #12515b; }
+.membership-shortcut strong { font-size: 1.5rem; font-weight: 600; }
+.care-shortcut { background: white; border: 1px solid var(--app-line); position: relative; }
+.care-shortcut strong { font-size: 1.05rem; }
+.care-shortcut span { color: #647780; font-size: .8rem; line-height: 1.7; }
+.care-shortcut > svg:last-child { position: absolute; inset-inline-end: 22px; top: 26px; }
+.care-shortcut:hover { border-color: #156570; }
+.app-content .rounded-3xl { border-radius: 18px; }
+.app-content .shadow-lg, .app-content .shadow-xl { box-shadow: 0 4px 18px #183b4509; }
+.app-content .bg-gradient-to-r, .app-content .bg-gradient-to-br { background-image: none; }
+.provider-card { box-shadow: none; }
+.provider-card > div:first-child { height: 84px; background: #edf5f6; color: #12515b; border-bottom: 1px solid #dce6e9; }
+.provider-card > div:first-child .pointer-events-none { display: none; }
+.provider-card > div:first-child .text-white, .provider-card > div:first-child .text-brand-teal-100 { color: #12515b; }
+.provider-card > div:first-child .bg-gradient-to-r { background: #12515b; color: white; box-shadow: none; }
+.provider-card > div:nth-child(2) { padding: 20px; }
+.provider-card h3 { font-size: 1rem; line-height: 1.6; }
+button, input, select { min-height: 44px; }
+input[type="checkbox"], input[type="radio"] { min-height: auto; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #2d7f8f; outline-offset: 3px; }
+input[type="tel"], input[name="nationalId"], input[name="phone"], .font-mono { direction: ltr; unicode-bidi: isolate; }
+[dir="rtl"] .font-mono { text-align: start; }
+@media (min-width: 768px) { .app-content { padding-bottom: 32px; } }
+@media (max-width: 767px) {
+  [data-app-header] > div:first-child { height: 64px; }
+  .workspace-heading { margin-bottom: 20px; }
+  .workspace-heading > svg { display: none; }
+  .home-shortcuts { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .membership-shortcut { grid-column: 1 / -1; padding: 20px; }
+  .care-shortcut { padding: 16px; gap: 12px; }
+  .care-shortcut > svg:last-child { display: none; }
+  .app-content > div { padding-top: 24px; }
+  .app-content h1 { font-size: 1.5rem; }
+  .app-content .text-xs { line-height: 1.7; }
+  .app-content .overflow-x-auto { overscroll-behavior-inline: contain; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

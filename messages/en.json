@@ -1,0 +1,198 @@
+{
+  "brand": {
+    "name": "Family Health",
+    "shortName": "F.H",
+    "tagline": "Comprehensive Care for Every Generation",
+    "taglineSub": "Instant medical discount network and comprehensive healthcare membership for your entire family",
+    "cardTitle": "Family Health Card",
+    "discountBadge": "Real discounts from first use",
+    "noApprovalBadge": "No approvals or limits",
+    "proximityBadge": "Lower prices, closer locations"
+  },
+  "nav": {
+    "home": "Home",
+    "directory": "Directory & Clinics",
+    "howItWorks": "How It Works",
+    "portal": "Family Card",
+    "admin": "Admin Panel",
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "verify": "Verify Card"
+  },
+  "hero": {
+    "badge": "Family Health Unified Card 🌿",
+    "title": "Premium Healthcare with Real Discounts up to 50%",
+    "subtitle": "One digital medical membership covering the primary member and all family dependents. No waiting periods, no prior insurance approvals, and direct WhatsApp booking with top clinics.",
+    "searchPlaceholder": "Search by doctor, clinic, specialty or city...",
+    "searchButton": "Search Network",
+    "allCategories": "All Categories",
+    "allCities": "All Cities",
+    "popularSpecialties": "Popular Specialties:",
+    "stats": {
+      "providers": "+500 Medical Providers",
+      "specialties": "+30 Specialties",
+      "savings": "Discounts up to 50%",
+      "families": "+10,000 Families Covered"
+    }
+  },
+  "directory": {
+    "title": "Verified Medical Network Directory",
+    "subtitle": "Browse clinics, pharmacies, labs, and radiology centers with explicit before and after discount pricing",
+    "filterCategory": "Main Categories",
+    "filterSubSpecialty": "Doctor Sub-Specialties",
+    "allProviders": "All Healthcare Providers",
+    "noResults": "No healthcare providers matched your search.",
+    "clearFilters": "Clear Filters",
+    "resultsCount": "Showing {count} verified medical facilities",
+    "discountUpTo": "Up to {percent}% OFF",
+    "viewDetails": "View Clinic & Prices",
+    "bookWhatsApp": "Book via WhatsApp",
+    "city": "City",
+    "address": "Address",
+    "phone": "Phone"
+  },
+  "provider": {
+    "about": "About the Clinic & Services",
+    "servicesTitle": "Services & Discounted Pricing Table",
+    "servicesSubtitle": "Instant transparent discounts applied directly without insurance pre-authorization",
+    "serviceName": "Service / Procedure",
+    "originalPrice": "Original Price",
+    "discountedPrice": "Family Health Price",
+    "savings": "You Save",
+    "workingHours": "Working Hours",
+    "contactInfo": "Contact & Location",
+    "quickBooking": "Fast Direct Booking",
+    "bookNowWhatsApp": "Book Instantly via WhatsApp",
+    "egp": "EGP"
+  },
+  "booking": {
+    "modalTitle": "Confirm Appointment Booking",
+    "modalSubtitle": "Appointment details will be sent directly to {providerName} via WhatsApp with your guaranteed discount applied.",
+    "selectPatient": "Who is this booking for?",
+    "myself": "For Myself (Primary Cardholder)",
+    "familyMember": "For a Family Dependent",
+    "chooseFamilyMember": "Choose Family Member",
+    "guestName": "Full Patient Name",
+    "guestPhone": "Phone / WhatsApp Number",
+    "guestNationalId": "National ID (Optional for Guests)",
+    "notes": "Additional notes or preferred appointment time",
+    "confirmAndSend": "Proceed to WhatsApp & Book 🌿",
+    "cancel": "Cancel",
+    "disclaimer": "The discount is applied upon showing your digital card or providing your registered National ID at the clinic."
+  },
+  "portal": {
+    "title": "Patient Portal & Family Card",
+    "subtitle": "Manage your membership, attach family dependents, and access your digital verification QR code",
+    "card": {
+      "front": "Family Health Card",
+      "membershipNo": "Membership ID",
+      "primaryHolder": "Primary Member",
+      "nationalId": "National ID",
+      "statusActive": "Active Card",
+      "statusInactive": "Inactive",
+      "validFor": "Covers primary cardholder and all registered dependents",
+      "scanToVerify": "Scan QR to verify validity and dependents"
+    },
+    "family": {
+      "title": "Family Members Covered (Coverage for All)",
+      "subtitle": "All attached dependents are entitled to direct discounts at all accredited network facilities",
+      "addMember": "Add Family Dependent",
+      "empty": "No family members added yet. Add your spouse, children, or parents to extend immediate coverage.",
+      "name": "Full Name",
+      "nationalId": "National ID (14 digits)",
+      "relation": "Relationship",
+      "addedDate": "Added Date",
+      "actions": "Actions",
+      "remove": "Remove",
+      "confirmRemove": "Are you sure you want to remove this dependent from your family membership?"
+    },
+    "relations": {
+      "spouse": "Spouse",
+      "son": "Son",
+      "daughter": "Daughter",
+      "father": "Father",
+      "mother": "Mother",
+      "other": "Dependent"
+    }
+  },
+  "admin": {
+    "title": "Central Administration Portal",
+    "subtitle": "Complete administrative control over healthcare network listings, patient cards, and booking logs",
+    "tabs": {
+      "providers": "Providers & Clinics",
+      "patients": "Members & Cards",
+      "categories": "Categories & Specialties",
+      "bookings": "WhatsApp Booking Logs"
+    },
+    "providers": {
+      "title": "Medical Providers Registry",
+      "addNew": "Add Clinic / Medical Center",
+      "name": "Facility / Doctor Name",
+      "category": "Category & Specialty",
+      "discount": "Discount Rate",
+      "city": "City",
+      "status": "Status",
+      "actions": "Actions",
+      "featured": "Featured",
+      "active": "Active",
+      "inactive": "Inactive",
+      "servicesCount": "Services: {count}"
+    },
+    "patients": {
+      "title": "Patient & Family Registry",
+      "addNew": "Register New Patient",
+      "name": "Cardholder Name",
+      "nationalId": "National ID",
+      "phone": "Phone",
+      "membershipNo": "Membership ID",
+      "dependents": "Family Members",
+      "status": "Card Status"
+    },
+    "bookings": {
+      "title": "WhatsApp Booking Dispatch Logs",
+      "patient": "Patient Name",
+      "phone": "Phone Number",
+      "provider": "Target Medical Facility",
+      "date": "Timestamp",
+      "nationalId": "National ID"
+    }
+  },
+  "auth": {
+    "title": "Sign In to Your Account",
+    "subtitle": "Enter your registered National ID and Password to access Family Health",
+    "nationalIdLabel": "National ID (14 digits)",
+    "nationalIdPlaceholder": "Enter 14-digit National ID",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "submit": "Sign In",
+    "adminBadge": "Admin Account",
+    "patientBadge": "Patient / Family Account",
+    "errorInvalid": "Invalid credentials. Please verify your National ID and password.",
+    "demoCredentials": "Demo accounts for quick testing:"
+  },
+  "verify": {
+    "title": "Family Health Card Verification",
+    "validCard": "Verified & Active Family Health Card 🌿",
+    "invalidCard": "Card not found or currently inactive.",
+    "membershipNo": "Membership ID",
+    "primaryHolder": "Primary Cardholder",
+    "nationalId": "National ID",
+    "phone": "Phone",
+    "familyMembersCovered": "Registered Family Dependents",
+    "instruction": "Medical facilities must honor agreed discount rates for all individuals listed on this page upon presenting personal identification."
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "loading": "Loading...",
+    "success": "Operation successful",
+    "error": "An error occurred, please try again",
+    "all": "All",
+    "search": "Search",
+    "language": "العربية",
+    "currentLang": "English"
+  }
+}
