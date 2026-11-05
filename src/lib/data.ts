@@ -18,6 +18,8 @@ declare global {
   var __fh_runtimeUsers: UserItem[] | undefined;
   var __fh_runtimeProviders: ProviderItem[] | undefined;
   var __fh_runtimeBookings: BookingLogItem[] | undefined;
+  var __fh_runtimeCategories: CategoryItem[] | undefined;
+  var __fh_runtimeDoctorSubSpecialties: CategoryItem[] | undefined;
 }
 
 const runtimeUsers: UserItem[] =
@@ -29,6 +31,12 @@ const runtimeProviders: ProviderItem[] =
 const runtimeBookings: BookingLogItem[] =
   globalThis.__fh_runtimeBookings ??
   (globalThis.__fh_runtimeBookings = []);
+const runtimeCategories: CategoryItem[] =
+  globalThis.__fh_runtimeCategories ??
+  (globalThis.__fh_runtimeCategories = JSON.parse(JSON.stringify(INITIAL_CATEGORIES)));
+const runtimeDoctorSubSpecialties: CategoryItem[] =
+  globalThis.__fh_runtimeDoctorSubSpecialties ??
+  (globalThis.__fh_runtimeDoctorSubSpecialties = JSON.parse(JSON.stringify(INITIAL_DOCTOR_SUB_SPECIALTIES)));
 
 // Circuit breaker for database availability to prevent connection hang
 let isDbOnline: boolean | null = null;
@@ -105,8 +113,8 @@ export async function getCategories(): Promise<{
   }
 
   return {
-    topCategories: INITIAL_CATEGORIES,
-    doctorSubSpecialties: INITIAL_DOCTOR_SUB_SPECIALTIES,
+    topCategories: runtimeCategories,
+    doctorSubSpecialties: runtimeDoctorSubSpecialties,
   };
 }
 
@@ -796,4 +804,186 @@ export async function deletePatientDocument(id: string): Promise<boolean> {
 
   return true;
 }
+
+/**
+ * Register a new patient account (Admin)
+ */
+export async function createPatientUser(data: {
+  nationalId: string;
+  passwordHash: string;
+  fullNameAr: string;
+  fullNameEn?: string;
+  phone: string;
+}): Promise<UserItem> {
+  const membershipNo = `FH-2025-${Math.floor(100000 + Math.random() * 900000)}`;
+
+  if (await isDatabaseReachable()) {
+    try {
+      const created = await prisma.user.create({
+        data: {
+          nationalId: data.nationalId,
+          passwordHash: data.passwordHash,
+          fullNameAr: data.fullNameAr,
+          fullNameEn: data.fullNameEn ?? null,
+          phone: data.phone,
+          role: "PATIENT",
+          membershipNo,
+          isActive: true,
+        },
+        include: { familyMembers: true, documents: true },
+      });
+
+      return {
+        id: created.id,
+        nationalId: created.nationalId,
+        passwordHash: created.passwordHash,
+        fullNameAr: created.fullNameAr,
+        fullNameEn: created.fullNameEn ?? "",
+        phone: created.phone,
+        role: created.role,
+        membershipNo: created.membershipNo,
+        isActive: created.isActive,
+        familyMembers: [],
+        documents: [],
+      };
+    } catch {
+      // Fallback
+    }
+  }
+
+  const newUser: UserItem = {
+    id: `usr-${Date.now()}`,
+    nationalId: data.nationalId,
+    passwordHash: data.passwordHash,
+    fullNameAr: data.fullNameAr,
+    fullNameEn: data.fullNameEn ?? data.fullNameAr,
+    phone: data.phone,
+    role: "PATIENT",
+    membershipNo,
+    isActive: true,
+    familyMembers: [],
+    documents: [],
+  };
+
+  runtimeUsers.unshift(newUser);
+  return newUser;
+}
+
+/**
+ * Toggle user active status (Admin)
+ */
+export async function toggleUserActive(userId: string): Promise<boolean> {
+  const target = runtimeUsers.find((u) => u.id === userId || u.nationalId === userId);
+  const newStatus = target ? !target.isActive : true;
+
+  if (await isDatabaseReachable()) {
+    try {
+      const user = await prisma.user.findFirst({
+        where: { OR: [{ id: userId }, { nationalId: userId }] },
+      });
+      if (user) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { isActive: !user.isActive },
+        });
+        return !user.isActive;
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  if (target) {
+    target.isActive = newStatus;
+  }
+  return newStatus;
+}
+
+/**
+ * Toggle provider active status (Admin)
+ */
+export async function toggleProviderActive(providerId: string): Promise<boolean> {
+  const target = runtimeProviders.find((p) => p.id === providerId || p.slug === providerId);
+  const newStatus = target ? !target.isActive : true;
+
+  if (await isDatabaseReachable()) {
+    try {
+      const prov = await prisma.provider.findFirst({
+        where: { OR: [{ id: providerId }, { slug: providerId }] },
+      });
+      if (prov) {
+        await prisma.provider.update({
+          where: { id: prov.id },
+          data: { isActive: !prov.isActive },
+        });
+        return !prov.isActive;
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  if (target) {
+    target.isActive = newStatus;
+  }
+  return newStatus;
+}
+
+/**
+ * Create a new category or sub-specialty (Admin)
+ */
+export async function createCategory(data: {
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  iconName: string;
+  parentId?: string | null;
+  sortOrder?: number;
+}): Promise<CategoryItem> {
+  if (await isDatabaseReachable()) {
+    try {
+      const cat = await prisma.category.create({
+        data: {
+          slug: data.slug,
+          nameAr: data.nameAr,
+          nameEn: data.nameEn,
+          iconName: data.iconName,
+          parentId: data.parentId ?? null,
+          sortOrder: data.sortOrder ?? 10,
+        },
+      });
+
+      return {
+        id: cat.id,
+        slug: cat.slug,
+        nameAr: cat.nameAr,
+        nameEn: cat.nameEn,
+        iconName: cat.iconName,
+        parentId: cat.parentId,
+        sortOrder: cat.sortOrder,
+      };
+    } catch {
+      // Fallback
+    }
+  }
+
+  const newCat: CategoryItem = {
+    id: `cat-${Date.now()}`,
+    slug: data.slug,
+    nameAr: data.nameAr,
+    nameEn: data.nameEn,
+    iconName: data.iconName,
+    parentId: data.parentId ?? null,
+    sortOrder: data.sortOrder ?? 10,
+  };
+
+  if (data.parentId) {
+    runtimeDoctorSubSpecialties.push(newCat);
+  } else {
+    runtimeCategories.push(newCat);
+  }
+
+  return newCat;
+}
+
 

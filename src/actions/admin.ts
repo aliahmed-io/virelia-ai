@@ -1,8 +1,18 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/auth";
-import { upsertProvider, deleteProvider, getProviderBySlug } from "@/lib/data";
+import {
+  upsertProvider,
+  deleteProvider,
+  createPatientUser,
+  toggleUserActive,
+  toggleProviderActive,
+  createCategory,
+  addFamilyMember,
+  deleteFamilyMember,
+} from "@/lib/data";
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
 
 export interface AdminActionResult {
   error?: string;
@@ -91,7 +101,7 @@ export async function saveProviderAction(
     revalidatePath(`/${locale}`);
 
     return { success: true };
-  } catch (e) {
+  } catch {
     return { error: "Failed to save provider" };
   }
 }
@@ -114,3 +124,207 @@ export async function deleteProviderAction(locale: string, providerId: string): 
     return { error: "Failed to delete provider" };
   }
 }
+
+/**
+ * Toggle Provider Active Status (Admin only)
+ */
+export async function toggleProviderStatusAction(locale: string, providerId: string): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await toggleProviderActive(providerId);
+    revalidatePath(`/${locale}/admin`);
+    revalidatePath(`/${locale}/directory`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to toggle provider status" };
+  }
+}
+
+/**
+ * Register New Patient (Admin only)
+ */
+export async function registerPatientAction(
+  locale: string,
+  prevState: AdminActionResult | null,
+  formData: FormData
+): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  const fullNameAr = (formData.get("fullNameAr") as string)?.trim();
+  const fullNameEn = (formData.get("fullNameEn") as string)?.trim() || undefined;
+  const nationalId = (formData.get("nationalId") as string)?.trim();
+  const phone = (formData.get("phone") as string)?.trim();
+  const passwordPlain = (formData.get("password") as string)?.trim() || "Patient@123";
+
+  if (!fullNameAr || !nationalId || !phone) {
+    return {
+      error:
+        locale === "ar"
+          ? "يرجى إدخال الاسم، الرقم القومي ورقم الهاتف"
+          : "Please fill full name, national ID and phone",
+    };
+  }
+
+  if (nationalId.length !== 14 || !/^\d+$/.test(nationalId)) {
+    return {
+      error:
+        locale === "ar"
+          ? "يجب أن يتكون الرقم القومي من 14 رقماً"
+          : "National ID must be exactly 14 digits",
+    };
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(passwordPlain, 10);
+    await createPatientUser({
+      nationalId,
+      passwordHash,
+      fullNameAr,
+      fullNameEn,
+      phone,
+    });
+
+    revalidatePath(`/${locale}/admin`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to register patient" };
+  }
+}
+
+/**
+ * Toggle User / Card Active Status (Admin only)
+ */
+export async function toggleUserStatusAction(locale: string, userId: string): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await toggleUserActive(userId);
+    revalidatePath(`/${locale}/admin`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to toggle user status" };
+  }
+}
+
+/**
+ * Create New Category or Doctor Sub-Specialty (Admin only)
+ */
+export async function createCategoryAction(
+  locale: string,
+  prevState: AdminActionResult | null,
+  formData: FormData
+): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  const nameAr = (formData.get("nameAr") as string)?.trim();
+  const nameEn = (formData.get("nameEn") as string)?.trim();
+  const slug = (formData.get("slug") as string)?.trim() || nameEn.toLowerCase().replace(/\s+/g, "-");
+  const iconName = (formData.get("iconName") as string)?.trim() || "Activity";
+  const parentId = (formData.get("parentId") as string)?.trim() || null;
+
+  if (!nameAr || !nameEn || !slug) {
+    return {
+      error:
+        locale === "ar"
+          ? "يرجى استيفاء الاسم بالعربية والإنجليزية والرابط"
+          : "Please provide Arabic name, English name and slug",
+    };
+  }
+
+  try {
+    await createCategory({
+      nameAr,
+      nameEn,
+      slug,
+      iconName,
+      parentId: parentId === "none" ? null : parentId,
+    });
+
+    revalidatePath(`/${locale}/admin`);
+    revalidatePath(`/${locale}/directory`);
+    revalidatePath(`/${locale}`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to create category" };
+  }
+}
+
+/**
+ * Admin add family member to any patient
+ */
+export async function adminAddFamilyMemberAction(
+  locale: string,
+  parentUserId: string,
+  formData: FormData
+): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  const fullNameAr = (formData.get("fullNameAr") as string)?.trim();
+  const nationalId = (formData.get("nationalId") as string)?.trim();
+  const relationAr = (formData.get("relationAr") as string)?.trim();
+
+  if (!fullNameAr || !nationalId || !relationAr) {
+    return { error: "Missing required fields" };
+  }
+
+  const relationMap: Record<string, string> = {
+    زوجة: "Spouse",
+    زوج: "Spouse",
+    ابن: "Son",
+    ابنة: "Daughter",
+    أب: "Father",
+    أم: "Mother",
+  };
+  const relationEn = relationMap[relationAr] ?? "Dependent";
+
+  try {
+    await addFamilyMember({
+      parentUserId,
+      fullNameAr,
+      fullNameEn: fullNameAr,
+      nationalId,
+      relationAr,
+      relationEn,
+    });
+
+    revalidatePath(`/${locale}/admin`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to add family member" };
+  }
+}
+
+/**
+ * Admin remove family member
+ */
+export async function adminDeleteFamilyMemberAction(locale: string, memberId: string): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await deleteFamilyMember(memberId);
+    revalidatePath(`/${locale}/admin`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to delete family member" };
+  }
+}
+
