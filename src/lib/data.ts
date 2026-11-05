@@ -9,13 +9,26 @@ import {
   type UserItem,
   type BookingLogItem,
   type FamilyMemberItem,
+  type PatientDocumentItem,
   type ServiceItem,
 } from "./mock-data";
 
-// In-memory runtime state fallback
-let runtimeUsers: UserItem[] = JSON.parse(JSON.stringify(INITIAL_USERS));
-let runtimeProviders: ProviderItem[] = JSON.parse(JSON.stringify(INITIAL_PROVIDERS));
-let runtimeBookings: BookingLogItem[] = [];
+// In-memory runtime state fallback attached to globalThis to share state across RSC and Server Actions
+declare global {
+  var __fh_runtimeUsers: UserItem[] | undefined;
+  var __fh_runtimeProviders: ProviderItem[] | undefined;
+  var __fh_runtimeBookings: BookingLogItem[] | undefined;
+}
+
+const runtimeUsers: UserItem[] =
+  globalThis.__fh_runtimeUsers ??
+  (globalThis.__fh_runtimeUsers = JSON.parse(JSON.stringify(INITIAL_USERS)));
+const runtimeProviders: ProviderItem[] =
+  globalThis.__fh_runtimeProviders ??
+  (globalThis.__fh_runtimeProviders = JSON.parse(JSON.stringify(INITIAL_PROVIDERS)));
+const runtimeBookings: BookingLogItem[] =
+  globalThis.__fh_runtimeBookings ??
+  (globalThis.__fh_runtimeBookings = []);
 
 // Circuit breaker for database availability to prevent connection hang
 let isDbOnline: boolean | null = null;
@@ -286,7 +299,7 @@ export async function getUserByNationalId(nationalId: string): Promise<UserItem 
     try {
       const u = await prisma.user.findUnique({
         where: { nationalId },
-        include: { familyMembers: true },
+        include: { familyMembers: true, documents: true },
       });
 
       if (u) {
@@ -310,6 +323,17 @@ export async function getUserByNationalId(nationalId: string): Promise<UserItem 
             relationEn: f.relationEn,
             createdAt: f.createdAt.toISOString(),
           })),
+          documents: u.documents.map((d) => ({
+            id: d.id,
+            userId: d.userId,
+            title: d.title,
+            category: d.category as PatientDocumentItem["category"],
+            fileType: d.fileType as PatientDocumentItem["fileType"],
+            fileName: d.fileName,
+            fileSize: d.fileSize,
+            fileUrl: d.fileUrl,
+            createdAt: d.createdAt.toISOString(),
+          })),
         };
       }
     } catch {
@@ -329,7 +353,7 @@ export async function getUserByMembershipNo(membershipNo: string): Promise<UserI
     try {
       const u = await prisma.user.findUnique({
         where: { membershipNo },
-        include: { familyMembers: true },
+        include: { familyMembers: true, documents: true },
       });
 
       if (u) {
@@ -352,6 +376,17 @@ export async function getUserByMembershipNo(membershipNo: string): Promise<UserI
             relationAr: f.relationAr,
             relationEn: f.relationEn,
             createdAt: f.createdAt.toISOString(),
+          })),
+          documents: u.documents.map((d) => ({
+            id: d.id,
+            userId: d.userId,
+            title: d.title,
+            category: d.category as PatientDocumentItem["category"],
+            fileType: d.fileType as PatientDocumentItem["fileType"],
+            fileName: d.fileName,
+            fileSize: d.fileSize,
+            fileUrl: d.fileUrl,
+            createdAt: d.createdAt.toISOString(),
           })),
         };
       }
@@ -414,7 +449,7 @@ export async function addFamilyMember(data: {
     createdAt: new Date().toISOString(),
   };
 
-  const user = runtimeUsers.find((u) => u.id === data.parentUserId);
+  const user = runtimeUsers.find((u) => u.id === data.parentUserId || u.nationalId === data.parentUserId);
   if (user) {
     user.familyMembers.push(newMember);
   }
@@ -541,7 +576,7 @@ export async function getAllUsers(): Promise<UserItem[]> {
   if (await isDatabaseReachable()) {
     try {
       const users = await prisma.user.findMany({
-        include: { familyMembers: true },
+        include: { familyMembers: true, documents: true },
         orderBy: { createdAt: "desc" },
       });
 
@@ -565,6 +600,17 @@ export async function getAllUsers(): Promise<UserItem[]> {
             relationAr: f.relationAr,
             relationEn: f.relationEn,
             createdAt: f.createdAt.toISOString(),
+          })),
+          documents: u.documents.map((d) => ({
+            id: d.id,
+            userId: d.userId,
+            title: d.title,
+            category: d.category as PatientDocumentItem["category"],
+            fileType: d.fileType as PatientDocumentItem["fileType"],
+            fileName: d.fileName,
+            fileSize: d.fileSize,
+            fileUrl: d.fileUrl,
+            createdAt: d.createdAt.toISOString(),
           })),
         }));
       }
@@ -629,3 +675,125 @@ export async function deleteProvider(id: string): Promise<boolean> {
   }
   return false;
 }
+
+/**
+ * Fetch patient documents
+ */
+export async function getPatientDocuments(userId: string): Promise<PatientDocumentItem[]> {
+  if (await isDatabaseReachable()) {
+    try {
+      const docs = await prisma.patientDocument.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (docs.length > 0) {
+        return docs.map((d) => ({
+          id: d.id,
+          userId: d.userId,
+          title: d.title,
+          category: d.category as PatientDocumentItem["category"],
+          fileType: d.fileType as PatientDocumentItem["fileType"],
+          fileName: d.fileName,
+          fileSize: d.fileSize,
+          fileUrl: d.fileUrl,
+          createdAt: d.createdAt.toISOString(),
+        }));
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  const user = runtimeUsers.find((u) => u.id === userId || u.nationalId === userId);
+  return user?.documents ?? [];
+}
+
+/**
+ * Add a patient document (Images, Word, PDF)
+ */
+export async function addPatientDocument(data: {
+  userId: string;
+  title: string;
+  category: PatientDocumentItem["category"];
+  fileType: PatientDocumentItem["fileType"];
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+}): Promise<PatientDocumentItem> {
+  if (await isDatabaseReachable()) {
+    try {
+      const created = await prisma.patientDocument.create({
+        data: {
+          userId: data.userId,
+          title: data.title,
+          category: data.category,
+          fileType: data.fileType,
+          fileName: data.fileName,
+          fileSize: data.fileSize,
+          fileUrl: data.fileUrl,
+        },
+      });
+
+      return {
+        id: created.id,
+        userId: created.userId,
+        title: created.title,
+        category: created.category as PatientDocumentItem["category"],
+        fileType: created.fileType as PatientDocumentItem["fileType"],
+        fileName: created.fileName,
+        fileSize: created.fileSize,
+        fileUrl: created.fileUrl,
+        createdAt: created.createdAt.toISOString(),
+      };
+    } catch {
+      // Fallback
+    }
+  }
+
+  const newDoc: PatientDocumentItem = {
+    id: `doc-${Date.now()}`,
+    userId: data.userId,
+    title: data.title,
+    category: data.category,
+    fileType: data.fileType,
+    fileName: data.fileName,
+    fileSize: data.fileSize,
+    fileUrl: data.fileUrl,
+    createdAt: new Date().toISOString(),
+  };
+
+  const user = runtimeUsers.find((u) => u.id === data.userId || u.nationalId === data.userId);
+  if (user) {
+    if (!user.documents) user.documents = [];
+    user.documents.unshift(newDoc);
+  }
+
+  return newDoc;
+}
+
+/**
+ * Delete a patient document
+ */
+export async function deletePatientDocument(id: string): Promise<boolean> {
+  if (await isDatabaseReachable()) {
+    try {
+      await prisma.patientDocument.delete({ where: { id } });
+      return true;
+    } catch {
+      // Fallback
+    }
+  }
+
+  for (const user of runtimeUsers) {
+    if (user.documents) {
+      const idx = user.documents.findIndex((d) => d.id === id);
+      if (idx !== -1) {
+        user.documents.splice(idx, 1);
+        return true;
+      }
+    }
+  }
+
+  return true;
+}
+

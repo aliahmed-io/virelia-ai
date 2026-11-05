@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getUserByNationalId } from "@/lib/data";
 import { DigitalFamilyCard } from "@/components/portal/DigitalFamilyCard";
 import { FamilyMembersManager } from "@/components/portal/FamilyMembersManager";
+import { PatientDocumentsManager } from "@/components/portal/PatientDocumentsManager";
 import Link from "next/link";
 import { Building2, Search, Sparkles, ExternalLink } from "lucide-react";
 
@@ -56,6 +57,14 @@ export default async function PortalPage({ params }: PortalPageProps) {
         {/* Digital Membership Card Showcase */}
         <div>
           <DigitalFamilyCard user={user} locale={locale} />
+        </div>
+
+        {/* Medical Records & Document Storage (صور، Word، PDF) */}
+        <div>
+          <PatientDocumentsManager
+            documents={user.documents || []}
+            locale={locale}
+          />
         </div>
 
         {/* Family Members Management Section (الإضافة للكل) */}

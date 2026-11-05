@@ -21,11 +21,26 @@ model User {
   phone         String
   role          Role           @default(PATIENT)
   membershipNo  String         @unique // Unique card number for QR verification
-  isActive      Boolean        @default(true)
+  isActive      Boolean           @default(true)
   familyMembers FamilyMember[]
   bookings      BookingLog[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  documents     PatientDocument[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model PatientDocument {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String   // اسم المستند أو الفحص
+  category  String   // روشتة | تحليل | أشعة | تقرير طبي | أخرى
+  fileType  String   // IMAGE | PDF | WORD
+  fileName  String   // Original filename
+  fileSize  Int      // Size in bytes
+  fileUrl   String   // File path or URL
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model FamilyMember {

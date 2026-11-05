@@ -46,6 +46,18 @@ export interface CategoryItem {
   children?: CategoryItem[];
 }
 
+export interface PatientDocumentItem {
+  id: string;
+  userId: string;
+  title: string;
+  category: "prescription" | "lab" | "radiology" | "report" | "other";
+  fileType: "IMAGE" | "PDF" | "WORD";
+  fileName: string;
+  fileSize: number;
+  fileUrl: string;
+  createdAt: string;
+}
+
 export interface UserItem {
   id: string;
   nationalId: string;
@@ -57,6 +69,7 @@ export interface UserItem {
   membershipNo: string;
   isActive: boolean;
   familyMembers: FamilyMemberItem[];
+  documents: PatientDocumentItem[];
 }
 
 export interface FamilyMemberItem {
@@ -420,6 +433,7 @@ export const INITIAL_USERS: UserItem[] = [
     membershipNo: "FH-ADM-100001",
     isActive: true,
     familyMembers: [],
+    documents: [],
   },
   {
     id: "usr-patient",
@@ -451,6 +465,41 @@ export const INITIAL_USERS: UserItem[] = [
         relationAr: "ابن",
         relationEn: "Son",
         createdAt: "2025-01-15T10:05:00.000Z",
+      },
+    ],
+    documents: [
+      {
+        id: "doc-1",
+        userId: "usr-patient",
+        title: "روشتة علاج السكري والضغط - عيادة د. طارق البنا",
+        category: "prescription",
+        fileType: "PDF",
+        fileName: "prescription_internal_medicine.pdf",
+        fileSize: 245760,
+        fileUrl: "#",
+        createdAt: "2025-01-20T11:30:00.000Z",
+      },
+      {
+        id: "doc-2",
+        userId: "usr-patient",
+        title: "صورة فحص الركبة بالرنين المغناطيسي - كايرو سكان",
+        category: "radiology",
+        fileType: "IMAGE",
+        fileName: "knee_mri_scan.jpg",
+        fileSize: 1887436,
+        fileUrl: "#",
+        createdAt: "2025-01-22T14:15:00.000Z",
+      },
+      {
+        id: "doc-3",
+        userId: "usr-patient",
+        title: "تقرير استشارة وفحص جراحي شامل - تقرير وورد",
+        category: "report",
+        fileType: "WORD",
+        fileName: "surgical_consultation_summary.docx",
+        fileSize: 104448,
+        fileUrl: "#",
+        createdAt: "2025-01-25T09:40:00.000Z",
       },
     ],
   },

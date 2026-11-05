@@ -22,7 +22,11 @@ export const FamilyMembersManager: React.FC<FamilyMembersManagerProps> = ({
   const [membersList, setMembersList] = useState<FamilyMemberItem[]>(familyMembers);
 
   React.useEffect(() => {
-    setMembersList(familyMembers);
+    setMembersList((prev) => {
+      const serverIds = new Set(familyMembers.map((m) => m.nationalId));
+      const optimisticOnly = prev.filter((m) => !serverIds.has(m.nationalId) && m.id.startsWith("fam-"));
+      return [...familyMembers, ...optimisticOnly];
+    });
   }, [familyMembers]);
 
   const [state, formAction, isPending] = useActionState<PortalActionResult | null, FormData>(
