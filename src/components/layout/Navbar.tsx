@@ -15,6 +15,8 @@ import {
   User as UserIcon,
   LogOut,
   QrCode,
+  Briefcase,
+  Download,
 } from "lucide-react";
 import { logoutAction } from "@/actions/auth";
 import type { SessionPayload } from "@/lib/auth";
@@ -41,9 +43,19 @@ export const Navbar: React.FC<NavbarProps> = ({ locale, user }) => {
       icon: Building2,
     },
     {
+      href: `/${locale}/companies`,
+      label: isAr ? "شركات ومعدات (بالتقسيط)" : "Companies & Equipment",
+      icon: Briefcase,
+    },
+    {
       href: `/${locale}/portal`,
       label: isAr ? "كارت العائلة" : "Family Card",
       icon: CreditCard,
+    },
+    {
+      href: `/${locale}/download`,
+      label: isAr ? "تحميل البرنامج" : "Download App",
+      icon: Download,
     },
   ];
 

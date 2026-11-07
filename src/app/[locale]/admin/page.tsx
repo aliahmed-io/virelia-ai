@@ -1,7 +1,7 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { getCategories, getProviders, getAllUsers, getBookingLogs } from "@/lib/data";
+import { getCategories, getProviders, getAllUsers, getBookingLogs, getMedicalCompanies } from "@/lib/data";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { ShieldCheck } from "lucide-react";
 
@@ -22,6 +22,7 @@ export default async function AdminPage({ params }: AdminPageProps) {
   const providers = await getProviders({ onlyActive: false });
   const users = await getAllUsers();
   const bookings = await getBookingLogs();
+  const companies = await getMedicalCompanies({ activeOnly: false });
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 sm:py-8">
@@ -49,6 +50,7 @@ export default async function AdminPage({ params }: AdminPageProps) {
           doctorSubSpecialties={doctorSubSpecialties}
           users={users}
           bookings={bookings}
+          companies={companies}
           locale={locale}
         />
       </div>

@@ -53,15 +53,15 @@ export async function authenticateCredentials(
   const cleanId = nationalId.trim();
   const user = await getUserByNationalId(cleanId);
 
-  if (!user || !user.isActive) {
+  if (!user || !user.isActive || user.isDeceased) {
     return null;
   }
 
-  // Support demo passwords directly or bcrypt compare
+  // Support patient national ID as password, demo accounts, or bcrypt compare
   const isMatch =
     passwordPlain === "Admin@1234" && user.role === "ADMIN"
       ? true
-      : passwordPlain === "Patient@123" && user.role === "PATIENT"
+      : (passwordPlain === user.nationalId || passwordPlain === "Patient@123") && user.role === "PATIENT"
       ? true
       : await bcrypt.compare(passwordPlain, user.passwordHash).catch(() => false);
 

@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { Navbar } from "@/components/layout/Navbar";
 
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { FloatingSupportWidget } from "@/components/layout/FloatingSupportWidget";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 import { getCurrentUser } from "@/lib/auth";
@@ -87,6 +88,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
           <main className="app-content flex-1">{children}</main>
 
           <MobileBottomNav locale={locale} user={currentUser} />
+          <FloatingSupportWidget locale={locale} />
           <PwaInstallPrompt locale={locale} />
         </NextIntlClientProvider>
       </body>

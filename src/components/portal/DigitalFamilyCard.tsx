@@ -179,7 +179,7 @@ export const DigitalFamilyCard: React.FC<DigitalFamilyCardProps> = ({ user, loca
             <div className="relative z-10 flex items-center justify-between border-t border-slate-800 pt-4 text-xs text-slate-400">
               <div className="flex items-center gap-1.5 font-bold text-slate-300">
                 <PhoneCall className="h-4 w-4 text-emerald-400" />
-                <span>{isAr ? "الخط الساخن: 19000" : "Hotline: 19000"}</span>
+                <span>{isAr ? "الدعم: 01004315212 - 01117945122" : "Support: 01004315212 / 01117945122"}</span>
               </div>
               <span className="text-[10px] text-slate-500 font-mono">familyhealth.eg</span>
             </div>

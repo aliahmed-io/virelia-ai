@@ -10,7 +10,13 @@ import {
   createCategory,
   addFamilyMember,
   deleteFamilyMember,
+  togglePatientDeceased,
+  deletePatientUser,
+  createMedicalCompany,
+  toggleMedicalCompanyActive,
+  deleteMedicalCompany,
 } from "@/lib/data";
+import type { CompanyType } from "@/lib/mock-data";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 
@@ -161,7 +167,7 @@ export async function registerPatientAction(
   const fullNameEn = (formData.get("fullNameEn") as string)?.trim() || undefined;
   const nationalId = (formData.get("nationalId") as string)?.trim();
   const phone = (formData.get("phone") as string)?.trim();
-  const passwordPlain = (formData.get("password") as string)?.trim() || "Patient@123";
+  const passwordPlain = (formData.get("password") as string)?.trim() || nationalId;
 
   if (!fullNameAr || !nationalId || !phone) {
     return {
@@ -325,6 +331,147 @@ export async function adminDeleteFamilyMemberAction(locale: string, memberId: st
     return { success: true };
   } catch {
     return { error: "Failed to delete family member" };
+  }
+}
+
+/**
+ * Toggle patient deceased status (Admin only)
+ */
+export async function togglePatientDeceasedAction(locale: string, userId: string): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await togglePatientDeceased(userId);
+    revalidatePath(`/${locale}/admin`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to toggle deceased status" };
+  }
+}
+
+/**
+ * Delete patient user permanently (Admin only)
+ */
+export async function deletePatientAction(locale: string, userId: string): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await deletePatientUser(userId);
+    revalidatePath(`/${locale}/admin`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to delete patient" };
+  }
+}
+
+/**
+ * Save / Create Medical Company (Admin only)
+ */
+export async function saveMedicalCompanyAction(
+  locale: string,
+  prevState: AdminActionResult | null,
+  formData: FormData
+): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  const nameAr = (formData.get("nameAr") as string)?.trim();
+  const nameEn = (formData.get("nameEn") as string)?.trim();
+  const slug = (formData.get("slug") as string)?.trim() || nameEn.toLowerCase().replace(/\s+/g, "-");
+  const type = (formData.get("type") as string) as CompanyType;
+  const phone = (formData.get("phone") as string)?.trim() || "";
+  const whatsapp = (formData.get("whatsapp") as string)?.trim() || "";
+  const cityAr = (formData.get("cityAr") as string)?.trim() || "القاهرة";
+  const cityEn = (formData.get("cityEn") as string)?.trim() || "Cairo";
+  const addressAr = (formData.get("addressAr") as string)?.trim() || "";
+  const addressEn = (formData.get("addressEn") as string)?.trim() || "";
+  const bioAr = (formData.get("bioAr") as string)?.trim() || "";
+  const bioEn = (formData.get("bioEn") as string)?.trim() || "";
+  const maxInstallmentMonths = parseInt(formData.get("maxInstallmentMonths") as string, 10) || 24;
+
+  if (!nameAr || !nameEn || !type || !whatsapp) {
+    return {
+      error:
+        locale === "ar"
+          ? "يرجى استيفاء الحقول الأساسية (اسم الشركة، النوع، ورقم الواتساب)"
+          : "Please fill required company fields (Name, Type, WhatsApp)",
+    };
+  }
+
+  try {
+    await createMedicalCompany({
+      nameAr,
+      nameEn,
+      slug,
+      type,
+      phone,
+      whatsapp,
+      cityAr,
+      cityEn,
+      addressAr,
+      addressEn,
+      bioAr,
+      bioEn,
+      maxInstallmentMonths,
+    });
+
+    revalidatePath(`/${locale}/admin`);
+    revalidatePath(`/${locale}/companies`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to create medical company" };
+  }
+}
+
+/**
+ * Toggle Medical Company Active Status (Admin only)
+ */
+export async function toggleMedicalCompanyStatusAction(
+  locale: string,
+  companyId: string
+): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await toggleMedicalCompanyActive(companyId);
+    revalidatePath(`/${locale}/admin`);
+    revalidatePath(`/${locale}/companies`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to toggle company status" };
+  }
+}
+
+/**
+ * Delete Medical Company (Admin only)
+ */
+export async function deleteMedicalCompanyAction(
+  locale: string,
+  companyId: string
+): Promise<AdminActionResult> {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    await deleteMedicalCompany(companyId);
+    revalidatePath(`/${locale}/admin`);
+    revalidatePath(`/${locale}/companies`);
+    return { success: true };
+  } catch {
+    return { error: "Failed to delete company" };
   }
 }
 

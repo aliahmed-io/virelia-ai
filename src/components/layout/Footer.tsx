@@ -91,20 +91,28 @@ export const Footer: React.FC<FooterProps> = ({ locale }) => {
             </p>
             <div className="flex flex-col gap-2 pt-1 text-sm text-slate-700">
               <a
-                href="https://wa.me/201000000000"
+                href="https://wa.me/201004315212"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 font-medium hover:border-emerald-500 hover:text-emerald-700 transition-colors"
+                className="inline-flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-2.5 font-medium hover:border-emerald-500 hover:text-emerald-700 transition-colors"
               >
-                <MessageSquare className="h-4 w-4 text-emerald-600" />
-                <span>{isAr ? "تواصل معنا عبر واتساب" : "Chat on WhatsApp"}</span>
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-emerald-600" />
+                  <span>{isAr ? "الدعم الفني 1 (واتساب)" : "Tech Support 1"}</span>
+                </div>
+                <span className="font-mono text-xs font-bold text-slate-900 dir-ltr">01004315212</span>
               </a>
               <a
-                href="tel:19000"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 font-medium hover:border-brand-teal-500 hover:text-brand-teal-700 transition-colors"
+                href="https://wa.me/201117945122"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-2.5 font-medium hover:border-brand-teal-500 hover:text-brand-teal-700 transition-colors"
               >
-                <Phone className="h-4 w-4 text-brand-teal-600" />
-                <span>{isAr ? "الخط الساخن: 19000" : "Hotline: 19000"}</span>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-brand-teal-600" />
+                  <span>{isAr ? "الدعم الفني 2 والتقسيط" : "Tech Support 2"}</span>
+                </div>
+                <span className="font-mono text-xs font-bold text-slate-900 dir-ltr">01117945122</span>
               </a>
             </div>
           </div>

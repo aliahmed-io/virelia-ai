@@ -68,6 +68,7 @@ export interface UserItem {
   role: "ADMIN" | "PATIENT";
   membershipNo: string;
   isActive: boolean;
+  isDeceased?: boolean;
   familyMembers: FamilyMemberItem[];
   documents: PatientDocumentItem[];
 }
@@ -500,6 +501,231 @@ export const INITIAL_USERS: UserItem[] = [
         fileSize: 104448,
         fileUrl: "#",
         createdAt: "2025-01-25T09:40:00.000Z",
+      },
+    ],
+  },
+];
+
+export type CompanyType = "MEDICAL_EQUIPMENT" | "PHARMACEUTICAL" | "CHEMICAL_LAB_SUPPLY";
+
+export interface InstallmentPlanItem {
+  months: number;
+  downPaymentPercent: number;
+  downPaymentAmount: number;
+  monthlyAmount: number;
+}
+
+export interface CompanyProductItem {
+  id: string;
+  companyId: string;
+  nameAr: string;
+  nameEn: string;
+  categoryAr: string;
+  categoryEn: string;
+  specsAr: string;
+  specsEn: string;
+  cashPrice: number;
+  minDownPaymentPercent: number;
+  installmentPlans: InstallmentPlanItem[];
+  imageUrl?: string;
+  inStock: boolean;
+}
+
+export interface MedicalCompanyItem {
+  id: string;
+  slug: string;
+  nameAr: string;
+  nameEn: string;
+  type: CompanyType;
+  typeNameAr: string;
+  typeNameEn: string;
+  phone: string;
+  whatsapp: string;
+  cityAr: string;
+  cityEn: string;
+  addressAr: string;
+  addressEn: string;
+  bioAr: string;
+  bioEn: string;
+  isInstallmentAvailable: boolean;
+  maxInstallmentMonths: number;
+  coverImageUrl?: string;
+  isActive: boolean;
+  products: CompanyProductItem[];
+}
+
+export const INITIAL_MEDICAL_COMPANIES: MedicalCompanyItem[] = [
+  {
+    id: "comp-1",
+    slug: "biomedix-medical-equipment",
+    nameAr: "الشركة الهندسية للأجهزة والمعدات الطبية (BioMedix)",
+    nameEn: "BioMedix Medical Systems & Equipment",
+    type: "MEDICAL_EQUIPMENT",
+    typeNameAr: "أجهزة ومعدات طبية",
+    typeNameEn: "Medical Equipment",
+    phone: "01004315212",
+    whatsapp: "201004315212",
+    cityAr: "القاهرة",
+    cityEn: "Cairo",
+    addressAr: "45 شارع مكرم عبيد، المنطقة السادسة، مدينة نصر، القاهرة",
+    addressEn: "45 Makram Ebeid St, 6th Zone, Nasr City, Cairo",
+    bioAr: "وكيل معتمد ومستورد كبرى الشركات العالمية في أجهزة الموجات الصوتية 4D، أجهزة رسم القلب، ومعدات غرف العمليات والعناية المركزة بتسهيلات تقسيط مباشرة للأطباء والمراكز الطبية حتى 36 شهراً.",
+    bioEn: "Authorized distributor of cutting-edge 4D ultrasound, ECG systems, and ICU equipment with direct installment facilities for healthcare providers up to 36 months.",
+    isInstallmentAvailable: true,
+    maxInstallmentMonths: 36,
+    isActive: true,
+    products: [
+      {
+        id: "prod-1",
+        companyId: "comp-1",
+        nameAr: "جهاز موجات فوق صوتية وسونار رباعي الأبعاد (4D Ultrasound)",
+        nameEn: "4D Color Doppler Ultrasound System",
+        categoryAr: "أجهزة تشخيصية وأشعة",
+        categoryEn: "Diagnostic Ultrasound",
+        specsAr: "شاشة 21.5 بوصة عالية الدقة، 4 منافذ مجسات نشطة، مجس باطنة ومجس نساء وتوليد 4D، خاصية التظهير التلقائي للأوعية الدموية.",
+        specsEn: "21.5 inch HD display, 4 active probe ports, convex & 4D volumetric probes with auto-vascular flow.",
+        cashPrice: 380000,
+        minDownPaymentPercent: 20,
+        installmentPlans: [
+          { months: 12, downPaymentPercent: 20, downPaymentAmount: 76000, monthlyAmount: 26800 },
+          { months: 24, downPaymentPercent: 20, downPaymentAmount: 76000, monthlyAmount: 14200 },
+          { months: 36, downPaymentPercent: 25, downPaymentAmount: 95000, monthlyAmount: 9500 },
+        ],
+        inStock: true,
+      },
+      {
+        id: "prod-2",
+        companyId: "comp-1",
+        nameAr: "جهاز رسم قلب 12 قناة ديجيتال مع تحليل تلقائي (ECG 12-Ch)",
+        nameEn: "12-Channel Digital ECG Machine with Auto Interpretation",
+        categoryAr: "أجهزة قلب وباطنة",
+        categoryEn: "Cardiology Equipment",
+        specsAr: "شاشة لمس 10 بوصة، طابعة حرارية مدمجة، ذاكرة تسع أكثر من 1000 فحص، بطارية قابلة لإعادة الشحن تدوم 6 ساعات.",
+        specsEn: "10 inch touch screen, integrated thermal printer, 1000+ patient memory, 6-hour rechargeable battery.",
+        cashPrice: 48000,
+        minDownPaymentPercent: 15,
+        installmentPlans: [
+          { months: 6, downPaymentPercent: 15, downPaymentAmount: 7200, monthlyAmount: 7100 },
+          { months: 12, downPaymentPercent: 20, downPaymentAmount: 9600, monthlyAmount: 3400 },
+        ],
+        inStock: true,
+      },
+    ],
+  },
+  {
+    id: "comp-2",
+    slug: "royal-dental-tech",
+    nameAr: "رويال دنتال لتجهيز عيادات ومراكز الأسنان",
+    nameEn: "Royal Dental Tech Solutions",
+    type: "MEDICAL_EQUIPMENT",
+    typeNameAr: "تجهيزات ومعدات أسنان",
+    typeNameEn: "Dental Equipment",
+    phone: "01117945122",
+    whatsapp: "201117945122",
+    cityAr: "الجيزة",
+    cityEn: "Giza",
+    addressAr: "18 شارع التحرير، الدقي، الجيزة",
+    addressEn: "18 El-Tahrir St, Dokki, Giza",
+    bioAr: "متخصصون في التجهيز المتكامل لعيادات ومراكز جراحة وزراعة الأسنان، كراسي الأسنان الهيدروليكية الأوروبية، وأجهزة الأشعة البانورامية الرقمية مع أنظمة تقسيط ميسرة.",
+    bioEn: "Turnkey dental clinic furnishings, European hydraulic dental chairs, and digital panoramic X-ray systems with flexible installment plans.",
+    isInstallmentAvailable: true,
+    maxInstallmentMonths: 24,
+    isActive: true,
+    products: [
+      {
+        id: "prod-3",
+        companyId: "comp-2",
+        nameAr: "وحدة كرسي أسنان هيدروليكي متكامل (Smart Dental Unit Pro)",
+        nameEn: "Hydraulic Smart Dental Chair Unit",
+        categoryAr: "تجهيز عيادات أسنان",
+        categoryEn: "Dental Units",
+        specsAr: "إضاءة ليد بدون ظلال مع حساس حركة، مبصقة خزفية متحركة، تابلوه طبيب متسع مع شاشة تحكم ديجيتال، موتور هيدروليكي فائق الهدوء.",
+        specsEn: "Shadowless sensor LED light, rotatable ceramic spittoon, broad doctor table with touch control, quiet hydraulic motor.",
+        cashPrice: 135000,
+        minDownPaymentPercent: 20,
+        installmentPlans: [
+          { months: 12, downPaymentPercent: 20, downPaymentAmount: 27000, monthlyAmount: 9500 },
+          { months: 24, downPaymentPercent: 25, downPaymentAmount: 33750, monthlyAmount: 4950 },
+        ],
+        inStock: true,
+      },
+    ],
+  },
+  {
+    id: "comp-3",
+    slug: "pharmacare-distribution",
+    nameAr: "فارماكير لتجارة وتوزيع الأدوية والمستلزمات الطبية",
+    nameEn: "PharmaCare Drug & Medical Distribution",
+    type: "PHARMACEUTICAL",
+    typeNameAr: "شركات ومخازن أدوية",
+    typeNameEn: "Pharmaceutical Distribution",
+    phone: "01004315212",
+    whatsapp: "201004315212",
+    cityAr: "القاهرة",
+    cityEn: "Cairo",
+    addressAr: "المنطقة الصناعية الثالثة، التجمع الخامس، القاهرة الجديدة",
+    addressEn: "3rd Industrial Zone, 5th Settlement, New Cairo",
+    bioAr: "توريد الأدوية والمحاليل الطبية ومستلزمات الطوارئ للعيادات والمراكز والمستشفيات، بأسعار الجملة المباشرة مع تسهيلات سداد ودفعات شهرية منتظمة.",
+    bioEn: "Direct pharmaceutical supplies, emergency kits, and IV fluids for clinics and private hospitals with scheduled deferred payments.",
+    isInstallmentAvailable: true,
+    maxInstallmentMonths: 12,
+    isActive: true,
+    products: [
+      {
+        id: "prod-4",
+        companyId: "comp-3",
+        nameAr: "بكج حقيبة طوارئ متكاملة للعيادات والمراكز التخصصية",
+        nameEn: "Comprehensive Clinic Emergency Crash Cart Kit",
+        categoryAr: "أدوية ومستلزمات طوارئ",
+        categoryEn: "Emergency Medical Supplies",
+        specsAr: "تشمل أدوية الطوارئ المعتمدة، أمبولات الإنعاش، كانيولات مقاسات متنوعة، جهاز ضغط زئبقي وسماعة طبية معتمدة مع دولاب أدوية طوارئ معدني.",
+        specsEn: "Includes crash cart medications, resuscitation ampoules, IV cannulas, certified sphygmomanometer & heavy duty storage cabinet.",
+        cashPrice: 22000,
+        minDownPaymentPercent: 20,
+        installmentPlans: [
+          { months: 6, downPaymentPercent: 20, downPaymentAmount: 4400, monthlyAmount: 3100 },
+          { months: 12, downPaymentPercent: 25, downPaymentAmount: 5500, monthlyAmount: 1500 },
+        ],
+        inStock: true,
+      },
+    ],
+  },
+  {
+    id: "comp-4",
+    slug: "chemlab-supplies-egypt",
+    nameAr: "المصرية لمستلزمات وكيماويات المعامل والتحاليل الطبية",
+    nameEn: "Egypt ChemLab Supplies & Diagnostic Reagents",
+    type: "CHEMICAL_LAB_SUPPLY",
+    typeNameAr: "مستلزمات وكيماويات معامل",
+    typeNameEn: "Chemical & Lab Supplies",
+    phone: "01117945122",
+    whatsapp: "201117945122",
+    cityAr: "الإسكندرية",
+    cityEn: "Alexandria",
+    addressAr: "70 طريق الحرية، سموحة، الإسكندرية",
+    addressEn: "70 Horreya Rd, Smouha, Alexandria",
+    bioAr: "تجهيز معامل التحاليل الطبية بأجهزة كيمياء الدم التلقائية، كواشف التحاليل المعتمدة (ISO & CE)، أجهزة سنترفيوج وحاضنات ومستلزمات سحب العينات.",
+    bioEn: "Equipping medical laboratories with automated blood chemistry analyzers, diagnostic reagents, centrifuges, and sample collection supplies with installment plans.",
+    isInstallmentAvailable: true,
+    maxInstallmentMonths: 24,
+    isActive: true,
+    products: [
+      {
+        id: "prod-5",
+        companyId: "comp-4",
+        nameAr: "جهاز كيمياء دم نصف أوتوماتيكي للمعامل (BioChem Semi-Auto)",
+        nameEn: "Semi-Automated Clinical Chemistry Analyzer",
+        categoryAr: "أجهزة معامل وتحاليل",
+        categoryEn: "Laboratory Analyzers",
+        specsAr: "طول موجي 340-670 نانومتر، كوفيت حراري مدمج، شاشة LCD ملونة، يدعم تحاليل وظائف الكبد والكلى والدهون والسكر بدقة مخبرية متناهية.",
+        specsEn: "340-670nm wavelengths, integrated thermal cuvette, color LCD display, full hepatic, renal and lipid profiles.",
+        cashPrice: 85000,
+        minDownPaymentPercent: 20,
+        installmentPlans: [
+          { months: 12, downPaymentPercent: 20, downPaymentAmount: 17000, monthlyAmount: 6000 },
+          { months: 24, downPaymentPercent: 25, downPaymentAmount: 21250, monthlyAmount: 3100 },
+        ],
+        inStock: true,
       },
     ],
   },

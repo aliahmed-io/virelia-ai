@@ -19,6 +19,9 @@ import {
   UserPlus,
   Tag,
   Loader2,
+  Briefcase,
+  CreditCard,
+  UserX,
 } from "lucide-react";
 import {
   saveProviderAction,
@@ -29,8 +32,21 @@ import {
   createCategoryAction,
   adminAddFamilyMemberAction,
   adminDeleteFamilyMemberAction,
+  togglePatientDeceasedAction,
+  deletePatientAction,
+  saveMedicalCompanyAction,
+  toggleMedicalCompanyStatusAction,
+  deleteMedicalCompanyAction,
 } from "@/actions/admin";
-import type { ProviderItem, CategoryItem, UserItem, BookingLogItem, ServiceItem } from "@/lib/mock-data";
+import type {
+  ProviderItem,
+  CategoryItem,
+  UserItem,
+  BookingLogItem,
+  ServiceItem,
+  MedicalCompanyItem,
+  CompanyType,
+} from "@/lib/mock-data";
 
 interface AdminDashboardProps {
   providers: ProviderItem[];
@@ -38,6 +54,7 @@ interface AdminDashboardProps {
   doctorSubSpecialties: CategoryItem[];
   users: UserItem[];
   bookings: BookingLogItem[];
+  companies?: MedicalCompanyItem[];
   locale: string;
 }
 
@@ -47,19 +64,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   doctorSubSpecialties: initialSubSpecialties,
   users: initialUsers,
   bookings,
+  companies: initialCompanies = [],
   locale,
 }) => {
   const router = useRouter();
   const isAr = locale === "ar";
   const [, startTransition] = useTransition();
 
-  const [activeTab, setActiveTab] = useState<"providers" | "patients" | "categories" | "bookings">("providers");
+  const [activeTab, setActiveTab] = useState<"providers" | "patients" | "categories" | "bookings" | "companies">("providers");
 
   // Local synced state
   const [providers, setProviders] = useState<ProviderItem[]>(initialProviders);
   const [users, setUsers] = useState<UserItem[]>(initialUsers);
   const [topCategories, setTopCategories] = useState<CategoryItem[]>(initialTopCategories);
   const [doctorSubSpecialties, setDoctorSubSpecialties] = useState<CategoryItem[]>(initialSubSpecialties);
+  const [companies, setCompanies] = useState<MedicalCompanyItem[]>(initialCompanies);
+
+  React.useEffect(() => {
+    setCompanies(initialCompanies);
+  }, [initialCompanies]);
+
+  // Company state
+  const [companySearch, setCompanySearch] = useState("");
+  const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
+  const [isSubmittingCompany, setIsSubmittingCompany] = useState(false);
+  const [companyFormError, setCompanyFormError] = useState<string | null>(null);
 
   React.useEffect(() => {
     setProviders(initialProviders);
@@ -317,27 +346,131 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     );
   });
 
+  const filteredCompanies = companies.filter((c) => {
+    const q = companySearch.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      c.nameAr.toLowerCase().includes(q) ||
+      c.nameEn.toLowerCase().includes(q) ||
+      c.cityAr.toLowerCase().includes(q) ||
+      c.typeNameAr.toLowerCase().includes(q)
+    );
+  });
+
+  const handleToggleDeceased = async (userId: string) => {
+    if (
+      !confirm(
+        isAr
+          ? "تأكيد تسجيل/إلغاء حالة وفاة لهذا المريض؟ في حالة التأكيد سيتم إيقاف صلاحية الكارت تلقائياً فوراً لمنع سوء الاستخدام."
+          : "Confirm toggle deceased status for this patient? The membership card will be immediately suspended."
+      )
+    ) {
+      return;
+    }
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId
+          ? {
+              ...u,
+              isDeceased: !u.isDeceased,
+              isActive: u.isDeceased ? true : false,
+            }
+          : u
+      )
+    );
+
+    await togglePatientDeceasedAction(locale, userId);
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
+  const handleDeletePatient = async (userId: string) => {
+    if (
+      !confirm(
+        isAr
+          ? "هل أنت متأكد من حذف حساب المريض وسجلاته الطبية نهائياً؟"
+          : "Permanently delete patient account and all records?"
+      )
+    ) {
+      return;
+    }
+
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+    await deletePatientAction(locale, userId);
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
+  const handleToggleCompany = async (companyId: string) => {
+    setCompanies((prev) =>
+      prev.map((c) => (c.id === companyId ? { ...c, isActive: !c.isActive } : c))
+    );
+    await toggleMedicalCompanyStatusAction(locale, companyId);
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
+  const handleDeleteCompany = async (companyId: string) => {
+    if (
+      !confirm(
+        isAr
+          ? "هل أنت متأكد من حذف هذه الشركة وجميع منتجاتها وقوائم التقسيط؟"
+          : "Permanently delete this medical company and its catalog?"
+      )
+    ) {
+      return;
+    }
+
+    setCompanies((prev) => prev.filter((c) => c.id !== companyId));
+    await deleteMedicalCompanyAction(locale, companyId);
+    startTransition(() => {
+      router.refresh();
+    });
+  };
+
+  const handleAddCompanySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmittingCompany(true);
+    setCompanyFormError(null);
+    const formData = new FormData(e.currentTarget);
+    const res = await saveMedicalCompanyAction(locale, null, formData);
+    setIsSubmittingCompany(false);
+
+    if (res.error) {
+      setCompanyFormError(res.error);
+    } else {
+      setIsAddCompanyOpen(false);
+      startTransition(() => {
+        router.refresh();
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Admin Stats Header */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-start shadow-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-teal-50 text-brand-teal-700">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 text-start shadow-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-teal-50 text-brand-teal-700">
             <Building2 className="h-5 w-5" />
           </div>
-          <span className="mt-4 block text-2xl font-bold text-slate-900 font-mono">
+          <span className="mt-3 block text-2xl font-bold text-slate-900 font-mono">
             {providers.length}
           </span>
           <span className="text-xs font-bold text-slate-500">
-            {isAr ? "مقدمو الخدمة والعيادات" : "Medical Providers"}
+            {isAr ? "العيادات والمراكز" : "Medical Providers"}
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-start shadow-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 text-start shadow-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
             <Users className="h-5 w-5" />
           </div>
-          <span className="mt-4 block text-2xl font-bold text-slate-900 font-mono">
+          <span className="mt-3 block text-2xl font-bold text-slate-900 font-mono">
             {users.length}
           </span>
           <span className="text-xs font-bold text-slate-500">
@@ -345,11 +478,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-start shadow-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 text-start shadow-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-brand-teal-50 text-brand-teal-700">
+            <Briefcase className="h-5 w-5" />
+          </div>
+          <span className="mt-3 block text-2xl font-bold text-slate-900 font-mono">
+            {companies.length}
+          </span>
+          <span className="text-xs font-bold text-slate-500">
+            {isAr ? "شركات ومعدات (بالتقسيط)" : "Companies & Equipment"}
+          </span>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 text-start shadow-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
             <Layers className="h-5 w-5" />
           </div>
-          <span className="mt-4 block text-2xl font-bold text-slate-900 font-mono">
+          <span className="mt-3 block text-2xl font-bold text-slate-900 font-mono">
             {topCategories.length + doctorSubSpecialties.length}
           </span>
           <span className="text-xs font-bold text-slate-500">
@@ -357,11 +502,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </span>
         </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-start shadow-sm">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 text-start shadow-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
             <MessageSquare className="h-5 w-5" />
           </div>
-          <span className="mt-4 block text-2xl font-bold text-slate-900 font-mono">
+          <span className="mt-3 block text-2xl font-bold text-slate-900 font-mono">
             {bookings.length}
           </span>
           <span className="text-xs font-bold text-slate-500">
@@ -371,11 +516,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex flex-wrap border-b border-slate-200">
         <button
           type="button"
           onClick={() => setActiveTab("providers")}
-          className={`inline-flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-colors ${
+          className={`inline-flex items-center gap-2 border-b-2 px-5 py-4 text-xs sm:text-sm font-bold transition-colors ${
             activeTab === "providers"
               ? "border-brand-teal-600 text-brand-teal-800"
               : "border-transparent text-slate-500 hover:text-slate-800"
@@ -387,8 +532,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           type="button"
+          onClick={() => setActiveTab("companies")}
+          className={`inline-flex items-center gap-2 border-b-2 px-5 py-4 text-xs sm:text-sm font-bold transition-colors ${
+            activeTab === "companies"
+              ? "border-brand-teal-600 text-brand-teal-800"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <Briefcase className="h-4 w-4" />
+          <span>{isAr ? "الشركات والمعدات (بالتقسيط)" : "Companies & Equipment"}</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab("patients")}
-          className={`inline-flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-colors ${
+          className={`inline-flex items-center gap-2 border-b-2 px-5 py-4 text-xs sm:text-sm font-bold transition-colors ${
             activeTab === "patients"
               ? "border-brand-teal-600 text-brand-teal-800"
               : "border-transparent text-slate-500 hover:text-slate-800"
@@ -401,7 +559,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab("categories")}
-          className={`inline-flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-colors ${
+          className={`inline-flex items-center gap-2 border-b-2 px-5 py-4 text-xs sm:text-sm font-bold transition-colors ${
             activeTab === "categories"
               ? "border-brand-teal-600 text-brand-teal-800"
               : "border-transparent text-slate-500 hover:text-slate-800"
@@ -414,7 +572,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab("bookings")}
-          className={`inline-flex items-center gap-2 border-b-2 px-6 py-4 text-sm font-bold transition-colors ${
+          className={`inline-flex items-center gap-2 border-b-2 px-5 py-4 text-xs sm:text-sm font-bold transition-colors ${
             activeTab === "bookings"
               ? "border-brand-teal-600 text-brand-teal-800"
               : "border-transparent text-slate-500 hover:text-slate-800"
@@ -603,42 +761,188 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </button>
                     </td>
                     <td className="py-4 px-4 text-start">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleUser(u.id)}
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border transition-colors ${
-                          u.isActive
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
-                            : "bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100"
-                        }`}
-                        title={isAr ? "انقر لتفعيل / تعطيل العضوية" : "Click to activate/deactivate"}
-                      >
-                        {u.isActive ? (
-                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        ) : (
-                          <XCircle className="h-3 w-3 text-rose-500" />
-                        )}
-                        <span>{u.isActive ? (isAr ? "ساري" : "Active") : (isAr ? "معطل" : "Suspended")}</span>
-                      </button>
+                      {u.isDeceased ? (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-rose-300 border border-slate-700">
+                          <UserX className="h-3 w-3 text-rose-400" />
+                          <span>{isAr ? "متوفي (معطل)" : "Deceased"}</span>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleUser(u.id)}
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border transition-colors ${
+                            u.isActive
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                              : "bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100"
+                          }`}
+                          title={isAr ? "انقر لتفعيل / تعطيل العضوية" : "Click to activate/deactivate"}
+                        >
+                          {u.isActive ? (
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          ) : (
+                            <XCircle className="h-3 w-3 text-rose-500" />
+                          )}
+                          <span>{u.isActive ? (isAr ? "ساري" : "Active") : (isAr ? "معطل" : "Suspended")}</span>
+                        </button>
+                      )}
                     </td>
                     <td className="py-4 ps-4 pe-6 text-end">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => setManagingFamilyUser(u)}
-                          className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition-colors"
+                          className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition-colors"
                         >
                           {isAr ? "التابعين" : "Family"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleDeceased(u.id)}
+                          className={`rounded-lg px-2 py-1 text-[11px] font-bold border transition-colors ${
+                            u.isDeceased
+                              ? "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                              : "border-slate-300 bg-slate-50 text-slate-700 hover:border-rose-300 hover:text-rose-700 hover:bg-rose-50"
+                          }`}
+                          title={isAr ? (u.isDeceased ? "إلغاء حالة الوفاة" : "تسجيل حالة وفاة وإيقاف الكارت") : "Toggle deceased status"}
+                        >
+                          {u.isDeceased ? (isAr ? "إلغاء وفاة" : "Undo") : (isAr ? "وفاة" : "Deceased")}
                         </button>
                         <a
                           href={`/${locale}/verify/${u.membershipNo}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-lg border border-brand-teal-200 bg-brand-teal-50 px-2.5 py-1 text-[11px] font-bold text-brand-teal-800 hover:bg-brand-teal-100 transition-colors"
+                          className="inline-flex items-center gap-1 rounded-lg border border-brand-teal-200 bg-brand-teal-50 px-2 py-1 text-[11px] font-bold text-brand-teal-800 hover:bg-brand-teal-100 transition-colors"
                         >
                           <span>{isAr ? "معاينة QR" : "QR"}</span>
                           <ExternalLink className="h-3 w-3" />
                         </a>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePatient(u.id)}
+                          className="rounded-lg p-1.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                          title={isAr ? "حذف الحساب نهائياً" : "Delete patient"}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Medical Companies & Equipment Management */}
+      {activeTab === "companies" && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
+              <input
+                type="text"
+                value={companySearch}
+                onChange={(e) => setCompanySearch(e.target.value)}
+                placeholder={isAr ? "بحث باسم الشركة، نوع الأجهزة أو المحافظة..." : "Search company name, equipment or city..."}
+                className="w-full rounded-2xl border border-slate-200 bg-white ps-11 pe-4 py-3 text-xs font-semibold focus:border-brand-teal-500 focus:outline-none"
+              />
+              <Search className="absolute start-4 top-3.5 h-4 w-4 text-slate-400" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setCompanyFormError(null);
+                setIsAddCompanyOpen(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-teal-600 px-5 py-3 text-xs font-bold text-white hover:bg-brand-teal-700 shadow-sm transition-all"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{isAr ? "إضافة شركة / مورد أجهزة جديد" : "Add Medical Company"}</span>
+            </button>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <table className="w-full text-start border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/80 text-xs font-bold text-slate-700">
+                  <th className="py-4 ps-6 pe-4 text-start">{isAr ? "اسم الشركة والمورد" : "Company Name"}</th>
+                  <th className="py-4 px-4 text-start">{isAr ? "النوع والتصنيف" : "Type"}</th>
+                  <th className="py-4 px-4 text-start">{isAr ? "المحافظة" : "City"}</th>
+                  <th className="py-4 px-4 text-start">{isAr ? "رقم الواتساب" : "WhatsApp"}</th>
+                  <th className="py-4 px-4 text-start">{isAr ? "أقصى تقسيط" : "Installment"}</th>
+                  <th className="py-4 px-4 text-start">{isAr ? "المنتجات" : "Products"}</th>
+                  <th className="py-4 px-4 text-start">{isAr ? "الحالة" : "Status"}</th>
+                  <th className="py-4 ps-4 pe-6 text-end">{isAr ? "إجراءات" : "Actions"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs font-semibold">
+                {filteredCompanies.map((c) => (
+                  <tr key={c.id} className="hover:bg-slate-50/50">
+                    <td className="py-4 ps-6 pe-4 text-start">
+                      <div>
+                        <span className="font-bold text-slate-900 block">{isAr ? c.nameAr : c.nameEn}</span>
+                        <span className="text-[11px] text-slate-400 font-mono">{c.slug}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-start">
+                      <span className="inline-flex items-center rounded-lg bg-brand-teal-50 px-2.5 py-1 text-brand-teal-800 font-bold border border-brand-teal-100">
+                        {isAr ? c.typeNameAr : c.typeNameEn}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-start text-slate-600">
+                      {isAr ? c.cityAr : c.cityEn}
+                    </td>
+                    <td className="py-4 px-4 text-start font-mono text-slate-700">
+                      {c.whatsapp}
+                    </td>
+                    <td className="py-4 px-4 text-start">
+                      <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                        <CreditCard className="h-3 w-3" />
+                        <span>{c.maxInstallmentMonths} {isAr ? "شهر" : "m"}</span>
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-start font-mono text-slate-700">
+                      {c.products.length} {isAr ? "أجهزة" : "items"}
+                    </td>
+                    <td className="py-4 px-4 text-start">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleCompany(c.id)}
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border transition-colors ${
+                          c.isActive
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                            : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
+                        }`}
+                        title={isAr ? "انقر لتفعيل / تعطيل الشركة" : "Click to toggle"}
+                      >
+                        {c.isActive ? (
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        ) : (
+                          <XCircle className="h-3 w-3 text-slate-400" />
+                        )}
+                        <span>{c.isActive ? (isAr ? "نشط" : "Active") : (isAr ? "موقوف" : "Inactive")}</span>
+                      </button>
+                    </td>
+                    <td className="py-4 ps-4 pe-6 text-end">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <a
+                          href={`/${locale}/companies/${c.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-brand-teal-200 bg-brand-teal-50 px-2.5 py-1 text-[11px] font-bold text-brand-teal-800 hover:bg-brand-teal-100 transition-colors"
+                        >
+                          <span>{isAr ? "الكتالوج" : "View"}</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCompany(c.id)}
+                          className="rounded-lg p-1.5 text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                          title={isAr ? "حذف الشركة" : "Delete company"}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -1380,6 +1684,213 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 >
                   {isSubmittingCategory && <Loader2 className="h-4 w-4 animate-spin" />}
                   <span>{isAr ? "إضافة القسم" : "Save Category"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 5: Add Medical Company */}
+      {isAddCompanyOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 sm:p-8 shadow-2xl my-8">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-teal-50 text-brand-teal-700 border border-brand-teal-100">
+                  <Briefcase className="h-5 w-5" />
+                </div>
+                <div className="text-start">
+                  <h3 className="text-lg font-bold text-slate-900">
+                    {isAr ? "إضافة شركة / مورد أجهزة ومستلزمات جديدة" : "Add Medical Company & Supplier"}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {isAr ? "تجهيز وتوريد للأطباء والمراكز مع أنظمة التقسيط" : "Medical equipment, pharma & lab suppliers with installments"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddCompanyOpen(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </div>
+
+            {companyFormError && (
+              <div className="mt-4 rounded-xl bg-rose-50 p-3 text-xs font-bold text-rose-700 border border-rose-200 text-start">
+                {companyFormError}
+              </div>
+            )}
+
+            <form onSubmit={handleAddCompanySubmit} className="mt-6 space-y-4 text-start">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "اسم الشركة (بالعربية) *" : "Company Name (Arabic) *"}
+                  </label>
+                  <input
+                    type="text"
+                    name="nameAr"
+                    required
+                    placeholder={isAr ? "مثال: الشركة الهندسية للأجهزة الطبية" : "e.g. BioMedix Egypt"}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "الاسم (بالإنجليزية) *" : "Company Name (English) *"}
+                  </label>
+                  <input
+                    type="text"
+                    name="nameEn"
+                    required
+                    placeholder="e.g. BioMedix Medical Systems"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "نوع الشركة والتصنيف *" : "Company Type *"}
+                  </label>
+                  <select
+                    name="type"
+                    required
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none"
+                  >
+                    <option value="MEDICAL_EQUIPMENT">{isAr ? "أجهزة ومعدات طبية" : "Medical Equipment"}</option>
+                    <option value="PHARMACEUTICAL">{isAr ? "شركات ومخازن أدوية" : "Pharmaceuticals"}</option>
+                    <option value="CHEMICAL_LAB_SUPPLY">{isAr ? "مستلزمات وكيماويات معامل" : "Chemical & Lab Supplies"}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "الرابط الفرعي (Slug)" : "Slug"}
+                  </label>
+                  <input
+                    type="text"
+                    name="slug"
+                    placeholder="e.g. biomedix-medical"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "أقصى فترة تقسيط (شهور)" : "Max Installment (Months)"}
+                  </label>
+                  <select
+                    name="maxInstallmentMonths"
+                    defaultValue="24"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none font-mono"
+                  >
+                    <option value="6">6 {isAr ? "شهور" : "Months"}</option>
+                    <option value="12">12 {isAr ? "شهراً" : "Months"}</option>
+                    <option value="18">18 {isAr ? "شهراً" : "Months"}</option>
+                    <option value="24">24 {isAr ? "شهراً (سنتين)" : "Months (2 Yrs)"}</option>
+                    <option value="36">36 {isAr ? "شهراً (3 سنوات)" : "Months (3 Yrs)"}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "رقم الواتساب للطلبات والتقسيط *" : "WhatsApp for Installments *"}
+                  </label>
+                  <input
+                    type="text"
+                    name="whatsapp"
+                    required
+                    placeholder="201004315212"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "رقم الهاتف المباشر" : "Direct Phone"}
+                  </label>
+                  <input
+                    type="text"
+                    name="phone"
+                    placeholder="01004315212"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "المحافظة (بالعربية)" : "City (Arabic)"}
+                  </label>
+                  <input
+                    type="text"
+                    name="cityAr"
+                    defaultValue="القاهرة"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {isAr ? "المحافظة (بالإنجليزية)" : "City (English)"}
+                  </label>
+                  <input
+                    type="text"
+                    name="cityEn"
+                    defaultValue="Cairo"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {isAr ? "العنوان ومقر الشركة التفصيلي" : "Detailed Company Address"}
+                </label>
+                <input
+                  type="text"
+                  name="addressAr"
+                  placeholder={isAr ? "مثال: 45 شارع مكرم عبيد، مدينة نصر، القاهرة" : "e.g. 45 Makram Ebeid St, Nasr City, Cairo"}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {isAr ? "نبذة عن الأجهزة والتسهيلات المقدمة" : "Bio & Equipment Details"}
+                </label>
+                <textarea
+                  name="bioAr"
+                  rows={2}
+                  placeholder={isAr ? "أجهزة سونار 4D، كراسي أسنان، رسم قلب مع تقسيط بدون فوائد..." : "Ultrasound systems, dental units, ECG with flexible installments..."}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-900 focus:border-brand-teal-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCompanyOpen(false)}
+                  className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                >
+                  {isAr ? "إلغاء" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingCompany}
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand-teal-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-brand-teal-700 shadow-sm disabled:opacity-50"
+                >
+                  {isSubmittingCompany && <Loader2 className="h-4 w-4 animate-spin" />}
+                  <span>{isAr ? "حفظ وإضافة الشركة" : "Save Company"}</span>
                 </button>
               </div>
             </form>

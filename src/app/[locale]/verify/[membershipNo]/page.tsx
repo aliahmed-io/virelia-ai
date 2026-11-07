@@ -148,14 +148,32 @@ export default async function VerifyPage({ params }: VerifyPageProps) {
               </p>
             </div>
           </div>
+        ) : user?.isDeceased ? (
+          /* Deceased Suspended Card */
+          <div className="rounded-3xl border-2 border-slate-700 bg-slate-900 p-8 text-center text-white shadow-xl space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
+              <XCircle className="h-8 w-8" />
+            </div>
+            <h2 className="text-xl font-bold text-rose-400">
+              {isAr ? "البطاقة موقوفة نهائياً (حالة وفاة) ⚠️" : "Card Suspended (Deceased Record) ⚠️"}
+            </h2>
+            <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+              {isAr
+                ? "تم إيقاف صلاحية هذا الكارت وكافة الأفراد المشمولين رسمياً من قبل الإدارة المركزية نظراً لتسجيل حالة وفاة. لا يجوز منح أي خصومات بموجب هذا السجل."
+                : "This membership has been suspended by administration due to a recorded deceased status. No discounts may be granted."}
+            </p>
+            <div className="pt-2 text-xs font-mono text-slate-400">
+              {isAr ? "رقم العضوية:" : "Card No:"} {user.membershipNo}
+            </div>
+          </div>
         ) : (
-          /* Invalid / Not Found Card */
+          /* Invalid / Inactive Card */
           <div className="rounded-3xl border-2 border-rose-300 bg-white p-8 text-center shadow-xl space-y-4">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
               <XCircle className="h-8 w-8" />
             </div>
             <h2 className="text-lg font-bold text-slate-900">
-              {isAr ? "عذراً، لم يتم العثور على بطاقة مطابقة أو العضوية غير نشطة" : "Card Not Found or Inactive"}
+              {isAr ? "عذراً، البطاقة معطلة أو لم يتم العثور عليها" : "Card Not Found or Suspended"}
             </h2>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
               {isAr

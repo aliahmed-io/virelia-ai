@@ -15,9 +15,12 @@
 **Family Health (صحة الأسرة — F.H)** is a production-ready, natively bilingual (**Arabic RTL / English LTR**) healthcare platform combining:
 1. **Instant Medical Discount Network (HealthTag Model):** "خصومات حقيقية من أول استخدام" (Real discounts from first use), "بدون موافقات أو حد أقصى" (No approvals or caps), "أسعار أقل وأماكن أقرب" (Lower prices, closer locations).
 2. **Centralized Admin Control (`أنا المتحكم بالإضافة والحذف`):** Providers and patients cannot self-publish; the administrator controls all clinic listings, discount rates, pricing catalogs, and card activations.
-3. **Direct WhatsApp Booking Engine (`مرتبط بالواتس للحجز`):** Direct 5-point appointment dispatch to doctors via WhatsApp with asynchronous tracking.
-4. **Family Membership Card (`الإضافة للكل`):** A digital 3D card covering the primary member and all family dependents with instant QR verification for clinic receptionists.
-5. **Patient Medical Document Vault (`قسم مساحة التخزين الطبي`):** Private patient cloud storage for Prescriptions, Lab Results, Radiology, and Medical Reports in **Images**, **Word (.docx)**, and **PDF** formats.
+3. **Medical Companies, Lab Supplies & Equipment with Installments (`قسم الشركات بالتقسيط ذي الأطباء`):** Direct catalog for ultrasound devices, dental units, ECGs, pharma distributors, and lab chemicals with 6, 12, 24, and 36-month installment calculators and WhatsApp quotations.
+4. **Direct WhatsApp Booking Engine (`مرتبط بالواتس للحجز`):** Direct 5-point appointment dispatch to doctors via WhatsApp with asynchronous tracking.
+5. **Family Membership Card (`الإضافة للكل`):** A digital 3D card covering the primary member and all family dependents with instant QR verification for clinic receptionists.
+6. **Patient Medical Document Vault (`قسم مساحة التخزين الطبي`):** Private patient cloud storage for Prescriptions, Lab Results, Radiology, and Medical Reports in **Images**, **Word (.docx)**, and **PDF** formats.
+7. **Cross-Platform PWA Installation (`البرنامج يتحمل على الموبيل والكمبيوتر`):** 1-click standalone app installation for Windows, Mac, Android, and iOS Safari.
+8. **Direct Technical Support Hotlines (`الدعم الفني المباشر`):** Global floating widget and direct communication via `01004315212` and `01117945122`.
 
 ---
 
@@ -107,7 +110,50 @@
 
 ---
 
-### 5. Patient & Admin Authentication (`/[locale]/login`)
+### 5. Medical Companies, Lab Supplies & Equipment with Installments (`/[locale]/companies`)
+
+| Directory View | Company Catalog & Installment Calculator |
+|---|---|
+| ![Companies Directory](screenshots/11_companies_directory_ar.png) | ![Company Detail](screenshots/12_company_detail_ar.png) |
+
+#### Features:
+* **Dedicated B2B Equipment Directory:** Tailored for doctors, dental clinics, laboratories, and medical centers to equip their practices.
+* **3 Major Supplier Classifications:**
+  * **Medical Equipment & Devices (`أجهزة ومعدات طبية`):** 4D Ultrasound, Digital Dental Units, ECG/Echo Monitors.
+  * **Pharmaceutical Distributors (`شركات ومخازن أدوية`):** Bulk pharmaceuticals and certified medical consumables.
+  * **Chemical & Lab Supplies (`كيماويات ومستلزمات معامل`):** Automated blood analyzers, diagnostic reagents, and lab testing kits.
+* **Flexible Installment Plans (6 to 36 Months):**
+  * Instant monthly installment breakdown (e.g. 6, 12, 24, 36 months) with zero hidden fees.
+  * Dynamic down payment calculation and monthly obligation preview.
+* **Direct WhatsApp Quotation Request:** Pre-populates the exact equipment specifications and preferred installment duration for rapid dispatch.
+
+---
+
+### 6. Cross-Platform App Installation & PWA (`/[locale]/download`)
+
+![Download App Page](screenshots/13_download_app_ar.png)
+
+#### Features:
+* **Desktop Standalone PWA:** 1-click install button for **Windows** and **Mac** via Google Chrome / Microsoft Edge.
+* **Android Direct Install:** Native Add-to-Home-Screen prompt with offline caching support.
+* **iOS Safari Step-by-Step Guide:** Illustrated visual guide for iPhone and iPad users using the "Add to Home Screen" Share menu.
+
+---
+
+### 7. Direct Technical Support Floating Widget & Hotlines
+
+![Direct Technical Support](screenshots/14_support_widget_ar.png)
+
+#### Features:
+* **Global Access:** Fixed floating widget available across all pages on mobile and desktop.
+* **Official Support Hotlines:** Direct 1-click WhatsApp or voice call to:
+  * **Line 1:** `01004315212`
+  * **Line 2:** `01117945122`
+* **Real-time Status Indicator:** Animated pulse badge signaling live team availability.
+
+---
+
+### 8. Patient & Admin Authentication (`/[locale]/login`)
 
 ![Login Portal](screenshots/06_login_ar.png)
 
@@ -119,14 +165,14 @@
 
 ---
 
-### 6. Patient Portal & Medical Document Vault (`/[locale]/portal`)
+### 9. Patient Portal & Medical Document Vault (`/[locale]/portal`)
 
 ![Patient Portal](screenshots/07_portal_patient_ar.png)
 
 #### Features:
 1. **Interactive 3D Digital Family Health Card:**
    - **Front Face:** Displays Family Health logo, Primary Member Name, 14-digit National ID, Card Number (`FH-2025-998877`), "Active / ساري" badge, and scannable QR Code.
-   - **Back Face (3D Flip):** Cardholder usage instructions, hotline (19000), and terms.
+   - **Back Face (3D Flip):** Cardholder usage instructions, hotline (`01004315212 - 01117945122`), and terms.
    - **Actions:** Copy card number, Print/Save PDF, and open direct Reception QR link.
 2. **Patient Medical Document Vault (`مساحة المستندات والملفات الطبية`):**
    - **Multi-Format Storage:** Upload and store **Images (`JPG`, `PNG`, `WEBP`)**, **Word documents (`.docx`, `.doc`)**, and **PDF** files.
@@ -141,23 +187,28 @@
 
 ---
 
-### 7. Public Reception QR Card Verification (`/[locale]/verify/[membershipNo]`)
+### 10. Public Reception QR Card Verification (`/[locale]/verify/[membershipNo]`)
 
 ![Reception Verification](screenshots/08_verify_card_ar.png)
 
 #### Features:
 * **Public Reception Portal:** Scanned by clinic receptionists using any smartphone camera without requiring login.
 * **Instant Validity Check:** Displays verified active cardholder badge (`بطاقة صحة الأسرة معتمدة وسارية 🌿`).
+* **Deceased & Suspension Safeguard:** Prominent red alert banner (`⚠️ الحساب موقوف / حالة وفاة مسجلة`) that strictly forbids granting discounts.
 * **Covered Family Dependents Table:** Lists all registered family members eligible for the discount.
 * **Fraud Prevention:** Confirms cardholder identity and national ID in real-time against the database.
 
 ---
 
-### 8. Central Admin Control Dashboard (`/[locale]/admin`)
+### 11. Central Admin Control Dashboard (`/[locale]/admin`)
 
 | Providers & Clinics Tab | Add / Edit Facility Modal |
 |---|---|
 | ![Admin Providers](screenshots/admin_tab_providers_ar.png) | ![Admin Add Provider Modal](screenshots/admin_modal_add_provider_ar.png) |
+
+| Companies & Installments Tab | Add Medical Company Modal |
+|---|---|
+| ![Admin Companies](screenshots/admin_tab_companies_ar.png) | ![Admin Add Company Modal](screenshots/admin_modal_add_company_ar.png) |
 
 | Patients & Family Cards Tab | Categories & Specialties Tab |
 |---|---|
@@ -174,31 +225,47 @@
   - **1-Click Status Toggle:** Switch clinic status between `نشط` (Active) and `موقوف` (Inactive).
   - **Dynamic Price List Builder:** Configure procedures with Before/After discounted prices.
   - Edit and Delete provider capabilities.
-* **Tab 2: Patients & Family Memberships (`المرضى وبطاقات العائلة`):**
+* **Tab 2: Medical Companies & Equipment (`الشركات والمعدات بالتقسيط`):**
+  - Manage equipment distributors, pharma companies, and chemical laboratories.
+  - Configure maximum installment periods (6, 12, 24, 36 months) and WhatsApp lines.
+  - **Add Company Modal:** Register new supplier with products, specifications, cash price, and installment plans.
+  - 1-click active/inactive toggle and direct link to public catalog.
+* **Tab 3: Patients & Family Memberships (`المرضى وبطاقات العائلة`):**
   - Search by patient name, National ID, or card number.
-  - **Register Patient Modal (`+ تسجيل مريض جديد`):** Provision new patient accounts with initial password and auto-generated card ID.
+  - **Register Patient Modal (`+ تسجيل مريض جديد`):** Provision new patient accounts with initial password defaulting to National ID.
   - **1-Click Card Status Toggle:** Instantly activate (`ساري`) or suspend (`معطل`) patient discount cards.
+  - **Deceased Status Toggle (`وفاة / إيقاف الكارت`):** Suspend cards and lock authentication in case of death with instant receipt warnings.
   - **Admin Family Dependents Drawer:** View, add, or remove dependents for any cardholder directly.
   - **QR Reception Link:** Direct shortcut to the public verification view.
-* **Tab 3: Taxonomy & Categories (`الأقسام والتخصصات`):**
+* **Tab 4: Taxonomy & Categories (`الأقسام والتخصصات`):**
   - Visual hierarchy of the 7 core categories and 6 doctor subspecialties.
   - **Add Category Modal (`+ إضافة قسم / تخصص جديد`):** Create new top-level categories or child doctor specialties with custom slugs and Lucide icons.
-* **Tab 4: WhatsApp Booking Logs (`سجل حجوزات الواتساب`):**
+* **Tab 5: WhatsApp Booking Logs (`سجل حجوزات الواتساب`):**
   - Real-time audit log of all outbound booking dispatches.
   - Displays patient name, phone, target clinic, card ID, and timestamp.
   - **One-Click CSV Export (`تحميل سجل الحجوزات CSV`):** Instant downloadable spreadsheet for partner clinic billing and audit reconciliation.
 
 ---
 
-### 9. Mobile-First Responsive PWA & Capacitor Readiness
+### 12. Mobile-First Responsive PWA & Capacitor Readiness
 
 ![Mobile Viewport](screenshots/10_mobile_home_ar.png)
 
 #### Features:
-* **Ergonomic Bottom Navigation Bar:** Quick access to Home, Directory, and Family Card on mobile devices.
+* **Ergonomic Bottom Navigation Bar:** Quick access to Home, Directory, Companies with Installments, and Family Card on mobile devices.
 * **44px+ Touch Targets:** Fully compliant with mobile accessibility standards.
 * **Horizontal Scroll Guard:** Zero layout overflow across 320px to 4K viewports.
 * **PWA Web App Manifest:** Configured via `manifest.json` for home-screen installation or wrapping with Capacitor / React Native.
+
+---
+
+### 📄 Master 22-Page High-Resolution PDF Showcase
+
+A complete, 22-page master PDF catalog titled with both Arabic and English headings is bundled directly in the repository:
+* **File:** [`Family_Health_Pages.pdf`](file:///d:/Virelia-AI/Family_Health_Pages.pdf) (5.48 MB)
+* **Includes:** All public portals, directory views, company installments catalogs, patient medical vault, reception QR verification, mobile views, and every tab/modal within the centralized admin suite.
+
+---
 
 ---
 

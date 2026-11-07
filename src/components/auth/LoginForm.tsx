@@ -26,7 +26,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ locale, redirectTo }) => {
 
   const fillPatient = () => {
     setNationalId("29901011234567");
-    setPassword("Patient@123");
+    setPassword("29901011234567");
   };
 
   return (
@@ -127,7 +127,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ locale, redirectTo }) => {
             <span className="block text-[11px] font-bold text-emerald-900">
               {isAr ? "حساب مريض + عائلة" : "Patient + Family"}
             </span>
-            <span className="block text-[10px] text-emerald-700 font-mono">Patient@123</span>
+            <span className="block text-[10px] text-emerald-700 font-mono">29901011234567</span>
           </button>
 
           <button
@@ -140,6 +140,24 @@ export const LoginForm: React.FC<LoginFormProps> = ({ locale, redirectTo }) => {
             </span>
             <span className="block text-[10px] text-brand-teal-700 font-mono">Admin@1234</span>
           </button>
+        </div>
+
+        <p className="mt-3 text-[11px] text-slate-500 text-start leading-relaxed">
+          {isAr
+            ? "💡 ملاحظة: كلمة المرور الافتراضية للمرضى وحاملي الكروت هي الرقم القومي نفسه (14 رقماً)."
+            : "💡 Note: Default cardholder password is your 14-digit National ID."}
+        </p>
+
+        {/* Tech Support Helpline */}
+        <div className="mt-4 border-t border-slate-100 pt-3 text-start">
+          <p className="text-[11px] text-slate-500">
+            {isAr ? "تحتاج مساعدة؟ تواصل مع الدعم الفني:" : "Need help? Contact support:"}
+          </p>
+          <div className="mt-1 flex items-center gap-3 text-xs font-mono font-bold text-brand-teal-700">
+            <a href="https://wa.me/201004315212" target="_blank" rel="noreferrer" className="hover:underline">01004315212</a>
+            <span>•</span>
+            <a href="https://wa.me/201117945122" target="_blank" rel="noreferrer" className="hover:underline">01117945122</a>
+          </div>
         </div>
       </div>
     </div>

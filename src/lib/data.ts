@@ -4,6 +4,7 @@ import {
   INITIAL_DOCTOR_SUB_SPECIALTIES,
   INITIAL_PROVIDERS,
   INITIAL_USERS,
+  INITIAL_MEDICAL_COMPANIES,
   type CategoryItem,
   type ProviderItem,
   type UserItem,
@@ -11,6 +12,9 @@ import {
   type FamilyMemberItem,
   type PatientDocumentItem,
   type ServiceItem,
+  type MedicalCompanyItem,
+  type CompanyProductItem,
+  type CompanyType,
 } from "./mock-data";
 
 // In-memory runtime state fallback attached to globalThis to share state across RSC and Server Actions
@@ -20,6 +24,7 @@ declare global {
   var __fh_runtimeBookings: BookingLogItem[] | undefined;
   var __fh_runtimeCategories: CategoryItem[] | undefined;
   var __fh_runtimeDoctorSubSpecialties: CategoryItem[] | undefined;
+  var __fh_runtimeCompanies: MedicalCompanyItem[] | undefined;
 }
 
 const runtimeUsers: UserItem[] =
@@ -37,6 +42,9 @@ const runtimeCategories: CategoryItem[] =
 const runtimeDoctorSubSpecialties: CategoryItem[] =
   globalThis.__fh_runtimeDoctorSubSpecialties ??
   (globalThis.__fh_runtimeDoctorSubSpecialties = JSON.parse(JSON.stringify(INITIAL_DOCTOR_SUB_SPECIALTIES)));
+const runtimeCompanies: MedicalCompanyItem[] =
+  globalThis.__fh_runtimeCompanies ??
+  (globalThis.__fh_runtimeCompanies = JSON.parse(JSON.stringify(INITIAL_MEDICAL_COMPANIES)));
 
 // Circuit breaker for database availability to prevent connection hang
 let isDbOnline: boolean | null = null;
@@ -984,6 +992,383 @@ export async function createCategory(data: {
   }
 
   return newCat;
+}
+
+/**
+ * Fetch all medical companies with optional filtering by type and search query
+ */
+export async function getMedicalCompanies(filter?: {
+  type?: string;
+  search?: string;
+  activeOnly?: boolean;
+}): Promise<MedicalCompanyItem[]> {
+  const activeOnly = filter?.activeOnly ?? true;
+
+  if (await isDatabaseReachable()) {
+    try {
+      const companies = await prisma.medicalCompany.findMany({
+        where: {
+          ...(activeOnly ? { isActive: true } : {}),
+          ...(filter?.type && filter.type !== "ALL" ? { type: filter.type as any } : {}),
+          ...(filter?.search
+            ? {
+                OR: [
+                  { nameAr: { contains: filter.search, mode: "insensitive" } },
+                  { nameEn: { contains: filter.search, mode: "insensitive" } },
+                  { cityAr: { contains: filter.search, mode: "insensitive" } },
+                ],
+              }
+            : {}),
+        },
+        include: { products: true },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return companies.map((c) => ({
+        id: c.id,
+        slug: c.slug,
+        nameAr: c.nameAr,
+        nameEn: c.nameEn,
+        type: c.type as CompanyType,
+        typeNameAr: c.typeNameAr,
+        typeNameEn: c.typeNameEn,
+        phone: c.phone,
+        whatsapp: c.whatsapp,
+        cityAr: c.cityAr,
+        cityEn: c.cityEn,
+        addressAr: c.addressAr,
+        addressEn: c.addressEn,
+        bioAr: c.bioAr,
+        bioEn: c.bioEn,
+        isInstallmentAvailable: c.isInstallmentAvailable,
+        maxInstallmentMonths: c.maxInstallmentMonths,
+        coverImageUrl: c.coverImageUrl ?? undefined,
+        isActive: c.isActive,
+        products: c.products.map((p) => ({
+          id: p.id,
+          companyId: p.companyId,
+          nameAr: p.nameAr,
+          nameEn: p.nameEn,
+          categoryAr: p.categoryAr,
+          categoryEn: p.categoryEn,
+          specsAr: p.specsAr,
+          specsEn: p.specsEn,
+          cashPrice: p.cashPrice,
+          minDownPaymentPercent: p.minDownPaymentPercent,
+          installmentPlans: (p.installmentPlans as any) || [],
+          imageUrl: p.imageUrl ?? undefined,
+          inStock: p.inStock,
+        })),
+      }));
+    } catch {
+      // Fallback
+    }
+  }
+
+  // In-memory fallback
+  let list = [...runtimeCompanies];
+  if (activeOnly) {
+    list = list.filter((c) => c.isActive);
+  }
+  if (filter?.type && filter.type !== "ALL") {
+    list = list.filter((c) => c.type === filter.type);
+  }
+  if (filter?.search) {
+    const q = filter.search.toLowerCase();
+    list = list.filter(
+      (c) =>
+        c.nameAr.toLowerCase().includes(q) ||
+        c.nameEn.toLowerCase().includes(q) ||
+        c.cityAr.toLowerCase().includes(q)
+    );
+  }
+  return list;
+}
+
+/**
+ * Fetch a single medical company by slug
+ */
+export async function getMedicalCompanyBySlug(slug: string): Promise<MedicalCompanyItem | null> {
+  if (await isDatabaseReachable()) {
+    try {
+      const c = await prisma.medicalCompany.findUnique({
+        where: { slug },
+        include: { products: true },
+      });
+      if (c) {
+        return {
+          id: c.id,
+          slug: c.slug,
+          nameAr: c.nameAr,
+          nameEn: c.nameEn,
+          type: c.type as CompanyType,
+          typeNameAr: c.typeNameAr,
+          typeNameEn: c.typeNameEn,
+          phone: c.phone,
+          whatsapp: c.whatsapp,
+          cityAr: c.cityAr,
+          cityEn: c.cityEn,
+          addressAr: c.addressAr,
+          addressEn: c.addressEn,
+          bioAr: c.bioAr,
+          bioEn: c.bioEn,
+          isInstallmentAvailable: c.isInstallmentAvailable,
+          maxInstallmentMonths: c.maxInstallmentMonths,
+          coverImageUrl: c.coverImageUrl ?? undefined,
+          isActive: c.isActive,
+          products: c.products.map((p) => ({
+            id: p.id,
+            companyId: p.companyId,
+            nameAr: p.nameAr,
+            nameEn: p.nameEn,
+            categoryAr: p.categoryAr,
+            categoryEn: p.categoryEn,
+            specsAr: p.specsAr,
+            specsEn: p.specsEn,
+            cashPrice: p.cashPrice,
+            minDownPaymentPercent: p.minDownPaymentPercent,
+            installmentPlans: (p.installmentPlans as any) || [],
+            imageUrl: p.imageUrl ?? undefined,
+            inStock: p.inStock,
+          })),
+        };
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  return runtimeCompanies.find((c) => c.slug === slug) ?? null;
+}
+
+/**
+ * Toggle medical company active status (Admin only)
+ */
+export async function toggleMedicalCompanyActive(id: string): Promise<boolean> {
+  if (await isDatabaseReachable()) {
+    try {
+      const company = await prisma.medicalCompany.findUnique({ where: { id } });
+      if (company) {
+        const updated = await prisma.medicalCompany.update({
+          where: { id },
+          data: { isActive: !company.isActive },
+        });
+        return updated.isActive;
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  const comp = runtimeCompanies.find((c) => c.id === id);
+  if (comp) {
+    comp.isActive = !comp.isActive;
+    return comp.isActive;
+  }
+  return false;
+}
+
+/**
+ * Delete medical company (Admin only)
+ */
+export async function deleteMedicalCompany(id: string): Promise<boolean> {
+  if (await isDatabaseReachable()) {
+    try {
+      await prisma.medicalCompany.delete({ where: { id } });
+      return true;
+    } catch {
+      // Fallback
+    }
+  }
+
+  const idx = runtimeCompanies.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    runtimeCompanies.splice(idx, 1);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Create a new medical company (Admin only)
+ */
+export async function createMedicalCompany(data: {
+  nameAr: string;
+  nameEn: string;
+  slug: string;
+  type: CompanyType;
+  phone: string;
+  whatsapp: string;
+  cityAr: string;
+  cityEn: string;
+  addressAr: string;
+  addressEn: string;
+  bioAr: string;
+  bioEn: string;
+  maxInstallmentMonths?: number;
+}): Promise<MedicalCompanyItem> {
+  const typeMap: Record<CompanyType, { ar: string; en: string }> = {
+    MEDICAL_EQUIPMENT: { ar: "أجهزة ومعدات طبية", en: "Medical Equipment" },
+    PHARMACEUTICAL: { ar: "شركات ومخازن أدوية", en: "Pharmaceuticals" },
+    CHEMICAL_LAB_SUPPLY: { ar: "مستلزمات وكيماويات معامل", en: "Chemical & Lab Supplies" },
+  };
+
+  const typeNameAr = typeMap[data.type]?.ar || "شركة طبية";
+  const typeNameEn = typeMap[data.type]?.en || "Medical Company";
+
+  const newCompany: MedicalCompanyItem = {
+    id: `comp-${Date.now()}`,
+    slug: data.slug,
+    nameAr: data.nameAr,
+    nameEn: data.nameEn,
+    type: data.type,
+    typeNameAr,
+    typeNameEn,
+    phone: data.phone,
+    whatsapp: data.whatsapp,
+    cityAr: data.cityAr,
+    cityEn: data.cityEn,
+    addressAr: data.addressAr,
+    addressEn: data.addressEn,
+    bioAr: data.bioAr,
+    bioEn: data.bioEn,
+    isInstallmentAvailable: true,
+    maxInstallmentMonths: data.maxInstallmentMonths || 24,
+    isActive: true,
+    products: [],
+  };
+
+  if (await isDatabaseReachable()) {
+    try {
+      const created = await prisma.medicalCompany.create({
+        data: {
+          slug: data.slug,
+          nameAr: data.nameAr,
+          nameEn: data.nameEn,
+          type: data.type as any,
+          typeNameAr,
+          typeNameEn,
+          phone: data.phone,
+          whatsapp: data.whatsapp,
+          cityAr: data.cityAr,
+          cityEn: data.cityEn,
+          addressAr: data.addressAr,
+          addressEn: data.addressEn,
+          bioAr: data.bioAr,
+          bioEn: data.bioEn,
+          isInstallmentAvailable: true,
+          maxInstallmentMonths: data.maxInstallmentMonths || 24,
+          isActive: true,
+        },
+        include: { products: true },
+      });
+
+      return {
+        ...newCompany,
+        id: created.id,
+      };
+    } catch {
+      // Fallback
+    }
+  }
+
+  runtimeCompanies.push(newCompany);
+  return newCompany;
+}
+
+/**
+ * Toggle patient deceased status (حالة الوفاة) - Admin only
+ * If deceased, the card is immediately suspended, and cannot be used at receptions or logged into.
+ */
+export async function togglePatientDeceased(userId: string): Promise<UserItem | null> {
+  if (await isDatabaseReachable()) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (user) {
+        const newDeceased = !user.isDeceased;
+        const updated = await prisma.user.update({
+          where: { id: userId },
+          data: {
+            isDeceased: newDeceased,
+            isActive: newDeceased ? false : true, // automatically deactivate if deceased
+          },
+          include: {
+            familyMembers: true,
+            documents: true,
+          },
+        });
+
+        return {
+          id: updated.id,
+          nationalId: updated.nationalId,
+          passwordHash: updated.passwordHash,
+          fullNameAr: updated.fullNameAr,
+          fullNameEn: updated.fullNameEn || "",
+          phone: updated.phone,
+          role: updated.role as "ADMIN" | "PATIENT",
+          membershipNo: updated.membershipNo,
+          isActive: updated.isActive,
+          isDeceased: updated.isDeceased,
+          familyMembers: updated.familyMembers.map((fm) => ({
+            id: fm.id,
+            parentUserId: fm.parentUserId,
+            fullNameAr: fm.fullNameAr,
+            fullNameEn: fm.fullNameEn || "",
+            nationalId: fm.nationalId,
+            relationAr: fm.relationAr,
+            relationEn: fm.relationEn,
+            createdAt: fm.createdAt.toISOString(),
+          })),
+          documents: updated.documents.map((d) => ({
+            id: d.id,
+            userId: d.userId,
+            title: d.title,
+            category: d.category as any,
+            fileType: d.fileType as any,
+            fileName: d.fileName,
+            fileSize: d.fileSize,
+            fileUrl: d.fileUrl,
+            createdAt: d.createdAt.toISOString(),
+          })),
+        };
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  const u = runtimeUsers.find((user) => user.id === userId);
+  if (u) {
+    u.isDeceased = !u.isDeceased;
+    if (u.isDeceased) {
+      u.isActive = false; // suspend card
+    } else {
+      u.isActive = true;
+    }
+    return u;
+  }
+  return null;
+}
+
+/**
+ * Delete patient user completely (حذف الحساب) - Admin only
+ */
+export async function deletePatientUser(userId: string): Promise<boolean> {
+  if (await isDatabaseReachable()) {
+    try {
+      await prisma.user.delete({ where: { id: userId } });
+      return true;
+    } catch {
+      // Fallback
+    }
+  }
+
+  const idx = runtimeUsers.findIndex((u) => u.id === userId);
+  if (idx !== -1) {
+    runtimeUsers.splice(idx, 1);
+    return true;
+  }
+  return false;
 }
 
 

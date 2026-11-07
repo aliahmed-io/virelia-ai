@@ -35,6 +35,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ locale }) => {
   };
 
   const handleQuickPill = (query: string) => {
+    if (query === "companies") {
+      router.push(`/${locale}/companies`);
+      return;
+    }
     router.push(`/${locale}/directory?q=${encodeURIComponent(query)}`);
   };
 
@@ -42,20 +46,20 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ locale }) => {
 
   const quickPills = isAr
     ? [
+        { label: "أجهزة ومعدات بالتقسيط 💳", query: "companies" },
         { label: "باطنة وسكر", query: "باطنة" },
         { label: "عظام ومفاصل", query: "عظام" },
         { label: "أسنان", query: "أسنان" },
         { label: "معامل تحاليل", query: "معامل" },
         { label: "مراكز أشعة", query: "أشعة" },
-        { label: "عيون وفيمتو ليزك", query: "عيون" },
       ]
     : [
+        { label: "Equipment Installments 💳", query: "companies" },
         { label: "Internal Medicine", query: "Internal" },
         { label: "Orthopedics", query: "Orthopedics" },
         { label: "Dental", query: "Dental" },
         { label: "Laboratories", query: "Laboratories" },
         { label: "Radiology", query: "Radiology" },
-        { label: "Ophthalmology", query: "Eye" },
       ];
 
   return (

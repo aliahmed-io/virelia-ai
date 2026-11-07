@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Building2, CreditCard, ShieldCheck, User as UserIcon } from "lucide-react";
+import { Home, Building2, CreditCard, ShieldCheck, User as UserIcon, Briefcase } from "lucide-react";
 import type { SessionPayload } from "@/lib/auth";
 
 interface MobileBottomNavProps {
@@ -27,6 +27,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ locale, user }
       label: isAr ? "الدليل" : "Directory",
       icon: Building2,
       isActive: pathname?.startsWith(`/${locale}/directory`) || pathname?.startsWith(`/${locale}/providers`),
+    },
+    {
+      href: `/${locale}/companies`,
+      label: isAr ? "الشركات" : "Companies",
+      icon: Briefcase,
+      isActive: pathname?.startsWith(`/${locale}/companies`),
     },
     {
       href: `/${locale}/portal`,

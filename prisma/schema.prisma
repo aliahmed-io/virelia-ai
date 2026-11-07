@@ -22,6 +22,7 @@ model User {
   role          Role           @default(PATIENT)
   membershipNo  String         @unique // Unique card number for QR verification
   isActive      Boolean           @default(true)
+  isDeceased    Boolean           @default(false) // حالة الوفاة
   familyMembers FamilyMember[]
   bookings      BookingLog[]
   documents     PatientDocument[]
@@ -107,4 +108,54 @@ model BookingLog {
   patientPhone String   // التليفون
   nationalId   String?  // الرقم القومي
   createdAt    DateTime @default(now())
+}
+
+enum CompanyType {
+  MEDICAL_EQUIPMENT   // شركات الأجهزة والمعدات الطبية
+  PHARMACEUTICAL      // شركات ومخازن الأدوية
+  CHEMICAL_LAB_SUPPLY // مستلزمات طبية وكيماويات المعامل
+}
+
+model MedicalCompany {
+  id                     String           @id @default(cuid())
+  slug                   String           @unique
+  nameAr                 String
+  nameEn                 String
+  type                   CompanyType
+  typeNameAr             String
+  typeNameEn             String
+  phone                  String
+  whatsapp               String
+  cityAr                 String
+  cityEn                 String
+  addressAr              String
+  addressEn              String
+  bioAr                  String           @db.Text
+  bioEn                  String           @db.Text
+  isInstallmentAvailable Boolean          @default(true)
+  maxInstallmentMonths   Int              @default(36)
+  coverImageUrl          String?
+  isActive               Boolean          @default(true)
+  products               CompanyProduct[]
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+}
+
+model CompanyProduct {
+  id                    String         @id @default(cuid())
+  companyId             String
+  company               MedicalCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  nameAr                String
+  nameEn                String
+  categoryAr            String
+  categoryEn            String
+  specsAr               String         @db.Text
+  specsEn               String         @db.Text
+  cashPrice             Float
+  minDownPaymentPercent Int            @default(20)
+  installmentPlans      Json           // Array of { months, downPaymentPercent, downPaymentAmount, monthlyAmount }
+  imageUrl              String?
+  inStock               Boolean        @default(true)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 }
